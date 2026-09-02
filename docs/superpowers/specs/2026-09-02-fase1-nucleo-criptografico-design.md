@@ -1,6 +1,8 @@
 # Fase 1 — Núcleo criptográfico e formato do cofre
 
-Status: aprovado para implementação
+> **SUPERADO (2026-09-02):** o projeto pivotou de app nativo Flutter/iOS para um PWA (site instalável, sem Xcode/App Store) — ver a nota no topo de `docs/briefing-cofre-pessoal.md`. As decisões de criptografia, formato do cofre e modelo de ameaças aqui continuam válidas em espírito (mesma Argon2id + XChaCha20-Poly1305, mesmo envelope encryption) e serão reaproveitadas na nova spec do PWA — mas os detalhes específicos de Dart/Flutter/`sodium` (pacote) abaixo não se aplicam mais.
+
+Status: aprovado para implementação (versão Flutter nativo — superada)
 Referência: [docs/briefing-cofre-pessoal.md](../../briefing-cofre-pessoal.md)
 
 ## Objetivo

@@ -1,5 +1,7 @@
 # Fase 1 — Núcleo Criptográfico e Formato do Cofre — Plano de Implementação
 
+> **SUPERADO (2026-09-02):** pivotamos de app nativo Flutter para um PWA — este plano é específico do pacote Dart `sodium`/Flutter e não será executado. Mantido como referência histórica; ver `docs/briefing-cofre-pessoal.md` para o estado atual do projeto.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Construir e testar, sem nenhuma UI, o núcleo que protege os dados do Cofre Pessoal — derivação de chave via Argon2id, envelope encryption da chave do cofre, criptografia autenticada dos dados via XChaCha20-Poly1305, formato de arquivo versionado, gravação atômica e recuperação de gravação interrompida.

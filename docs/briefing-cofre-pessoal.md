@@ -2,11 +2,13 @@
 
 > Esta é uma revisão do briefing original. O conteúdo técnico e os requisitos de segurança foram preservados quase integralmente — as mudanças são: (1) o trabalho foi dividido em fases com checkpoint de aprovação entre elas, em vez de um único ciclo monolítico de 17 etapas; (2) decisões que o briefing original deixava em aberto foram fechadas, com justificativa, para que o desenho técnico possa começar sem bloqueios. Qualquer decisão abaixo pode ser revertida — está marcada como tal para facilitar.
 
+> **Pivô de plataforma (2026-09-02):** o briefing original e a primeira tentativa de execução eram para um app nativo Flutter (Android então iOS). Isso travou de forma irrecuperável no ambiente disponível — o pacote de criptografia escolhido exige o Xcode completo (não só o Command Line Tools) até para rodar os testes no Mac de desenvolvimento, e instalar o Xcode exige login com Apple ID e comandos com senha de administrador, coisas que não posso fazer pelo usuário. Durante essa conversa, o usuário esclareceu o que realmente queria: um site instalável (PWA — Progressive Web App), com ícone na tela de início do iPhone, hospedado gratuitamente no GitHub Pages, sem servidor e sem sincronização — as senhas continuam só no aparelho do usuário. Isso elimina a necessidade de Xcode/App Store por completo e é compatível com toda a modelagem de segurança já feita (Argon2id, XChaCha20-Poly1305, envelope encryption, sem nuvem, sem telemetria) — só muda a tecnologia de implementação, de Dart/Flutter para JavaScript/TypeScript rodando no navegador. As seções abaixo que mencionam Flutter/Android/iOS nativo refletem a versão anterior; a arquitetura de fato usada é a de PWA descrita na spec correspondente.
+
 ## Papel e princípios gerais
 
-Atue como arquiteto de segurança, especialista em criptografia aplicada, desenvolvedor Flutter sênior e responsável pela qualidade do projeto.
+Atue como arquiteto de segurança, especialista em criptografia aplicada, desenvolvedor front-end sênior (PWA) e responsável pela qualidade do projeto.
 
-Construa, no diretório atual, um aplicativo móvel de gerenciamento de senhas chamado provisoriamente "Cofre Pessoal": Android primeiro, arquitetura compatível com iOS, interface em português do Brasil, código em repositório privado no GitHub (só código/testes/docs — nunca dados do cofre).
+Construa, no diretório atual, um aplicativo web instalável (PWA) de gerenciamento de senhas chamado provisoriamente "Cofre Pessoal": interface em português do Brasil, testado principalmente no Safari do iPhone do usuário (iPhone 17 Pro Max), hospedado como site estático no GitHub Pages, código em repositório privado no GitHub (só código/testes/docs — nunca dados do cofre).
 
 Regras que valem para todas as fases:
 
