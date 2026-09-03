@@ -91,18 +91,7 @@ export function App() {
         />
       )}
       {mainView.view === 'settings' && (
-        <SettingsScreen
-          repository={repository}
-          onBack={() => setMainView({ view: 'list' })}
-          onLock={() => {
-            // SettingsScreen não usa useVaultSession (recebe onLock como prop simples),
-            // então precisamos fechar a sessão aqui mesmo — não basta repassar
-            // handleLock, senão a DEK nunca seria zerada (VaultSessionContext.lock()
-            // faz isso, mas nada nesta árvore chama esse `lock()`).
-            repository.closeSession(gate.session);
-            handleLock();
-          }}
-        />
+        <SettingsScreen repository={repository} onBack={() => setMainView({ view: 'list' })} />
       )}
     </VaultSessionProvider>
   );
