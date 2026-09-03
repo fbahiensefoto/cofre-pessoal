@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@types/libsodium-wrappers-sumo": "^0.8.2",
+    "@types/node": "^26.4.1",
     "fake-indexeddb": "^6.2.5",
     "typescript": "^7.0.2",
     "vitest": "^4.1.11"
