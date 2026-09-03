@@ -1,33 +1,36 @@
 :root {
   color-scheme: light;
   --color-bg: #ffffff;
-  --color-text: #1a1a1a;
-  --color-primary: #1a1a2e;
-  --color-border: #d0d0d0;
+  --color-text: #17181a;
+  --color-primary: #17181a;
+  --color-border: #c3c6cc;
   --color-danger: #b3261e;
-  --color-surface: #f5f5f7;
+  --color-surface: #eef0f2;
+  --color-surface-2: #dde0e4;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
-    --color-bg: #121212;
-    --color-text: #f0f0f0;
-    --color-primary: #8a8aff;
-    --color-border: #333333;
+    --color-bg: #0d0d0f;
+    --color-text: #f2f2f4;
+    --color-primary: #c9cbd1;
+    --color-border: #55585f;
     --color-danger: #ff6b6b;
-    --color-surface: #1e1e1e;
+    --color-surface: #2a2c30;
+    --color-surface-2: #45484f;
   }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --color-bg: #121212;
-  --color-text: #f0f0f0;
-  --color-primary: #8a8aff;
-  --color-border: #333333;
+  --color-bg: #0d0d0f;
+  --color-text: #f2f2f4;
+  --color-primary: #c9cbd1;
+  --color-border: #55585f;
   --color-danger: #ff6b6b;
-  --color-surface: #1e1e1e;
+  --color-surface: #2a2c30;
+  --color-surface-2: #45484f;
 }
 
 * {
@@ -65,7 +68,7 @@ select,
 textarea {
   min-height: 44px;
   padding: 8px;
-  background: var(--color-bg);
+  background: var(--color-surface);
   color: var(--color-text);
   border: 1px solid var(--color-border);
   appearance: none;
