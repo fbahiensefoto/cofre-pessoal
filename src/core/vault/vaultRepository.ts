@@ -148,7 +148,10 @@ export class VaultRepository {
   private decryptPayload(header: VaultHeader, file: VaultFile, dek: Uint8Array): VaultData {
     try {
       const plain = this.aead.decrypt(file.dataCiphertext, file.dataNonce, dek, header.dataAad);
-      return JSON.parse(new TextDecoder().decode(plain)) as VaultData;
+      const parsed = JSON.parse(new TextDecoder().decode(plain)) as Partial<VaultData>;
+      // Cofres criados antes de `people` existir no payload não têm essa chave —
+      // sem o default, o app quebra logo após um desbloqueio com a senha certa.
+      return { people: parsed.people ?? [], credentials: parsed.credentials ?? [] };
     } catch {
       throw new VaultAuthenticationFailedError();
     }

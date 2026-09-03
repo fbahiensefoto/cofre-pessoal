@@ -3,8 +3,11 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { Sodium } from '../../../src/core/crypto/sodiumProvider';
 import { initSodium } from '../../../src/core/crypto/sodiumProvider';
 import { interactiveParams, type Argon2Params } from '../../../src/core/crypto/keyDerivation';
+import { AeadCipher } from '../../../src/core/crypto/aeadCipher';
 import type { Credential } from '../../../src/core/model/credential';
 import { VaultAuthenticationFailedError } from '../../../src/core/vault/vaultExceptions';
+import { VaultFile } from '../../../src/core/vault/vaultFormat';
+import { VaultKeyManager } from '../../../src/core/vault/vaultKeyManager';
 import { VaultRepository } from '../../../src/core/vault/vaultRepository';
 import { VaultStorage } from '../../../src/core/vault/vaultStorage';
 
@@ -128,6 +131,29 @@ describe('VaultRepository — sessão', () => {
     // Sem essa checagem, isto criptografaria com uma DEK zerada e destruiria
     // o cofre bom — ver Fix 5 da revisão final da Fase 2.
     await expect(repo.saveVaultData(session, { people: [], credentials: [sampleCredential()] })).rejects.toThrow('Sessão já foi bloqueada.');
+  });
+
+  it('openSession com cofre no formato antigo (payload sem "people") não quebra e devolve people: []', async () => {
+    // Cofres criados antes de Pessoa virar um registro próprio tinham o payload
+    // cifrado só com `credentials`, sem a chave `people` — a app não pode quebrar
+    // ao desbloquear um cofre real assim (ver bug real encontrado em produção).
+    const keyManager = new VaultKeyManager(sodium);
+    const aead = new AeadCipher(sodium);
+    const dek = keyManager.generateDek();
+    const { header, wrapped } = keyManager.wrapNewDek(dek, 'senha-formato-antigo', params);
+
+    const payloadAntigo = JSON.stringify({ credentials: [sampleCredential()] });
+    const nonce = aead.generateNonce();
+    const ciphertext = aead.encrypt(new TextEncoder().encode(payloadAntigo), nonce, dek, header.dataAad);
+    const file = new VaultFile(header, wrapped, nonce, ciphertext);
+    await new VaultStorage().writeAtomic(file.toBytes());
+    sodium.memzero(dek);
+
+    const { session, people, credentials } = await repo.openSession('senha-formato-antigo');
+    expect(people).toEqual([]);
+    expect(credentials).toHaveLength(1);
+    expect(credentials[0]?.serviceName).toBe('Serviço Fictício de Sessão');
+    repo.closeSession(session);
   });
 
   it('saveVaultData com sessão aberta antes de um changeMasterPassword ainda produz um cofre abrível com a nova senha', async () => {
