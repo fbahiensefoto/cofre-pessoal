@@ -105,8 +105,18 @@ export class VaultRepository {
     const bytes = await this.storage.readBytes();
     const file = VaultFile.fromBytes(bytes);
 
+    // Usa file.header (lido agora do storage), não session.header (capturado em
+    // openSession e potencialmente desatualizado): wrapNewDek/rewrapDek geram um
+    // header novo (salt novo) a cada chamada e autenticam wrappedDek contra os
+    // bytes desse header novo. Se changeMasterPassword rodou depois que esta
+    // sessão foi aberta, file.header e file.wrappedDek já formam o par
+    // consistente e atual — persistir session.header (antigo) junto com
+    // file.wrappedDek (novo) deixaria essa dupla inconsistente e o cofre
+    // permanentemente inabrível, mesmo com a senha nova correta. session.dek
+    // continua válido para reuso: changeMasterPassword reembrulha a mesma DEK,
+    // nunca gera uma nova.
     const newFile = this.encryptPayload(
-      session.header,
+      file.header,
       file.wrappedDek,
       session.dek,
       credentials,

@@ -100,4 +100,22 @@ describe('VaultRepository — sessão', () => {
     expect(session.dek.every((b) => b === 0)).toBe(true);
     expect(copiaAntes.some((b) => b !== 0)).toBe(true);
   });
+
+  it('saveCredentials com sessão aberta antes de um changeMasterPassword ainda produz um cofre abrível com a nova senha', async () => {
+    await repo.createVault('senha-ficticia', params);
+    const { session } = await repo.openSession('senha-ficticia');
+
+    // Troca de senha por um caminho separado (ex.: tela de configurações),
+    // enquanto a sessão em memória continua aberta com o header antigo.
+    await repo.changeMasterPassword('senha-ficticia', 'senha-nova-ficticia', params);
+
+    const credencialPosTroca = sampleCredential({ id: 'id-pos-troca-003', serviceName: 'Serviço Pós-Troca' });
+    await repo.saveCredentials(session, [credencialPosTroca]);
+    repo.closeSession(session);
+
+    const { session: novaSessao, credentials } = await repo.openSession('senha-nova-ficticia');
+    expect(credentials).toHaveLength(1);
+    expect(credentials[0]?.serviceName).toBe('Serviço Pós-Troca');
+    repo.closeSession(novaSessao);
+  });
 });
