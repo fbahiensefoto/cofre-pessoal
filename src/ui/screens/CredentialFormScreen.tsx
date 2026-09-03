@@ -153,6 +153,7 @@ export function CredentialFormScreen(props: {
           required
           value={form.password}
           onInput={(e) => updateField('password', (e.target as HTMLInputElement).value)}
+          style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', letterSpacing: '0.04em' }}
         />
         <PasswordStrengthMeter password={form.password} />
 

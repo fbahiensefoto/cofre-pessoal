@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks';
 import { useVaultSession } from '../state/VaultSessionContext';
 import { CategoryBadge } from '../components/CategoryBadge';
 import { TagList } from '../components/TagList';
+import { ChevronLeftIcon } from '../components/icons';
 
 export function CredentialDetailScreen(props: { credentialId: string; onBack: () => void; onEdit: (id: string) => void }) {
   const { credentials } = useVaultSession();
@@ -13,7 +14,7 @@ export function CredentialDetailScreen(props: { credentialId: string; onBack: ()
       <div>
         <p>Credencial não encontrada.</p>
         <button type="button" onClick={props.onBack}>
-          Voltar
+          <ChevronLeftIcon /> Voltar
         </button>
       </div>
     );
@@ -22,7 +23,7 @@ export function CredentialDetailScreen(props: { credentialId: string; onBack: ()
   return (
     <div>
       <button type="button" onClick={props.onBack}>
-        ← Voltar
+        <ChevronLeftIcon /> Voltar
       </button>
       <h1>{credencial.serviceName}</h1>
       {credencial.owner && (
@@ -45,7 +46,10 @@ export function CredentialDetailScreen(props: { credentialId: string; onBack: ()
       )}
 
       <p>
-        <strong>Senha:</strong> {senhaVisivel ? credencial.password : '••••••••'}
+        <strong>Senha:</strong>{' '}
+        <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', letterSpacing: '0.04em' }}>
+          {senhaVisivel ? credencial.password : '••••••••'}
+        </span>
       </p>
       <button type="button" onClick={() => setSenhaVisivel((v) => !v)}>
         {senhaVisivel ? 'Ocultar senha' : 'Revelar senha'}

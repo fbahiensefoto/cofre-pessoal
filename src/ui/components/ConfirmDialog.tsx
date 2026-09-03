@@ -27,8 +27,9 @@ export function ConfirmDialog(props: {
         style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-accent)',
-          padding: '16px',
-          borderRadius: '8px',
+          padding: '20px',
+          borderRadius: '16px',
+          boxShadow: 'var(--shadow-md)',
           maxWidth: '400px',
           width: '100%',
         }}

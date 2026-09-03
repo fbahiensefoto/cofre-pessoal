@@ -18,6 +18,8 @@
   --color-danger: #b3261e;
   --color-surface: #eef0f2;
   --color-accent: #5b5e66;
+  --shadow-sm: 0 1px 2px rgba(23, 24, 26, 0.08), 0 1px 1px rgba(23, 24, 26, 0.04);
+  --shadow-md: 0 8px 24px rgba(23, 24, 26, 0.16);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,6 +30,8 @@
     --color-danger: #ff6b6b;
     --color-surface: #2a2c30;
     --color-accent: #a3a6ad;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.55);
   }
 }
 
@@ -38,6 +42,8 @@
   --color-danger: #ff6b6b;
   --color-surface: #2a2c30;
   --color-accent: #a3a6ad;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.55);
 }
 
 * {
@@ -50,6 +56,27 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
   margin: 0;
   accent-color: var(--color-accent);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1 {
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0 0 4px;
+}
+
+h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+}
+
+section {
+  margin-top: 24px;
 }
 
 button,
@@ -68,22 +95,59 @@ button {
   background: var(--color-surface);
   color: var(--color-text);
   border: 1px solid var(--color-accent);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+button:active {
+  transform: scale(0.97);
 }
 
 input:not([type='checkbox']):not([type='radio']),
 select,
 textarea {
   min-height: 44px;
-  padding: 8px;
+  padding: 8px 10px;
   background: var(--color-surface);
   color: var(--color-text);
   border: 1px solid var(--color-accent);
+  border-radius: 10px;
   appearance: none;
   -webkit-appearance: none;
+  transition: border-color 0.15s ease;
 }
 
 textarea {
   min-height: 88px;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  input,
+  select,
+  textarea {
+    transition: none;
+  }
+
+  button:active {
+    transform: none;
+  }
 }
 
 #root > div {

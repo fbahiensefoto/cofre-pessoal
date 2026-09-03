@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'preact/hooks';
 import { useVaultSession } from '../state/VaultSessionContext';
 import { CredentialListItem } from '../components/CredentialListItem';
+import { ChevronLeftIcon } from '../components/icons';
 
 export function PersonCredentialsScreen(props: {
   owner: string;
@@ -29,7 +30,7 @@ export function PersonCredentialsScreen(props: {
   return (
     <div>
       <button type="button" onClick={props.onBack}>
-        ← Voltar
+        <ChevronLeftIcon /> Voltar
       </button>
       <h1>{props.owner}</h1>
 
@@ -44,7 +45,7 @@ export function PersonCredentialsScreen(props: {
       {filtradas.length === 0 ? (
         <p>Nenhuma credencial encontrada.</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {filtradas.map((c) => (
             <CredentialListItem key={c.id} credential={c} onSelect={props.onSelectCredential} onToggleFavorite={toggleFavorite} />
           ))}

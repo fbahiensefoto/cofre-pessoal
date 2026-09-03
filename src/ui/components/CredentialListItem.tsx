@@ -1,6 +1,7 @@
 import type { Credential } from '../../core/model/credential';
 import { CategoryBadge } from './CategoryBadge';
 import { TagList } from './TagList';
+import { StarIcon, StarOutlineIcon } from './icons';
 
 export function CredentialListItem(props: {
   credential: Credential;
@@ -10,7 +11,18 @@ export function CredentialListItem(props: {
   const { credential } = props;
 
   return (
-    <li style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', borderBottom: '1px solid var(--color-accent)' }}>
+    <li
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '8px 10px',
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-accent)',
+        borderRadius: '10px',
+        boxShadow: 'var(--shadow-sm)',
+      }}
+    >
       <button
         type="button"
         aria-label={credential.favorite ? 'Remover dos favoritos' : 'Marcar como favorito'}
@@ -22,14 +34,26 @@ export function CredentialListItem(props: {
           // podemos deixar a rejeição sem tratamento nenhum.
           Promise.resolve(props.onToggleFavorite(credential.id)).catch(() => {});
         }}
-        style={{ minWidth: '44px', minHeight: '44px' }}
+        style={{ minWidth: '44px', minHeight: '44px', background: 'transparent', border: 'none', boxShadow: 'none' }}
       >
-        {credential.favorite ? '★' : '☆'}
+        {credential.favorite ? <StarIcon /> : <StarOutlineIcon />}
       </button>
       <button
         type="button"
         onClick={() => props.onSelect(credential.id)}
-        style={{ flex: 1, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '4px', minHeight: '44px' }}
+        style={{
+          flex: 1,
+          textAlign: 'left',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          gap: '4px',
+          minHeight: '44px',
+          background: 'transparent',
+          border: 'none',
+          boxShadow: 'none',
+        }}
       >
         <span>{credential.serviceName}</span>
         <span style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>

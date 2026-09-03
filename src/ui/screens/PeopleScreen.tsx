@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'preact/hooks';
 import { useVaultSession } from '../state/VaultSessionContext';
+import { GearIcon } from '../components/icons';
 
 export function PeopleScreen(props: { onSelectPerson: (name: string) => void; onOpenSettings: () => void }) {
   const { people, credentials, addPerson } = useVaultSession();
@@ -56,7 +57,7 @@ export function PeopleScreen(props: { onSelectPerson: (name: string) => void; on
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>Cofre Pessoal</h1>
         <button type="button" onClick={props.onOpenSettings} aria-label="Configurações">
-          ⚙
+          <GearIcon />
         </button>
       </header>
 
@@ -66,13 +67,23 @@ export function PeopleScreen(props: { onSelectPerson: (name: string) => void; on
       {pessoasFiltradas.length === 0 ? (
         <p>Nenhuma pessoa encontrada.</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {pessoasFiltradas.map((pessoa) => (
-            <li key={pessoa.id} style={{ borderBottom: '1px solid var(--color-accent)' }}>
+            <li key={pessoa.id}>
               <button
                 type="button"
                 onClick={() => props.onSelectPerson(pessoa.name)}
-                style={{ width: '100%', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '4px', minHeight: '44px', padding: '8px 0' }}
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  minHeight: '44px',
+                  padding: '10px 14px',
+                }}
               >
                 <span>{pessoa.name}</span>
                 <span style={{ color: 'var(--color-accent)', fontSize: '0.85em' }}>

@@ -4,6 +4,7 @@ import type { VaultRepository } from '../../core/vault/vaultRepository';
 import { useTheme } from '../lib/useTheme';
 import { useVaultSession } from '../state/VaultSessionContext';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
+import { ChevronLeftIcon } from '../components/icons';
 
 export function SettingsScreen(props: { repository: VaultRepository; onBack: () => void }) {
   const { preference, setPreference } = useTheme();
@@ -48,7 +49,7 @@ export function SettingsScreen(props: { repository: VaultRepository; onBack: () 
   return (
     <div>
       <button type="button" onClick={props.onBack}>
-        ← Voltar
+        <ChevronLeftIcon /> Voltar
       </button>
       <h1>Configurações</h1>
 
