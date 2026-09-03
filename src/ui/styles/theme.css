@@ -7,6 +7,7 @@
   --color-danger: #b3261e;
   --color-surface: #eef0f2;
   --color-surface-2: #dde0e4;
+  --color-text-muted: #5b5e66;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,6 +20,7 @@
     --color-danger: #ff6b6b;
     --color-surface: #2a2c30;
     --color-surface-2: #45484f;
+    --color-text-muted: #a3a6ad;
   }
 }
 
@@ -31,6 +33,7 @@
   --color-danger: #ff6b6b;
   --color-surface: #2a2c30;
   --color-surface-2: #45484f;
+  --color-text-muted: #a3a6ad;
 }
 
 * {
@@ -128,4 +131,11 @@ select {
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 32px;
+}
+
+/* -webkit-appearance:none no input não basta para tirar o "x" de limpar do
+   Safari — ele vive num pseudo-elemento próprio, precisa da própria regra. */
+input[type='search']::-webkit-search-cancel-button {
+  appearance: none;
+  -webkit-appearance: none;
 }

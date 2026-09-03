@@ -43,7 +43,7 @@ export function PeopleScreen(props: { onSelectPerson: (name: string) => void; on
                 style={{ width: '100%', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '4px', minHeight: '44px', padding: '8px 0' }}
               >
                 <span>{pessoa.name}</span>
-                <span style={{ color: 'var(--color-border)', fontSize: '0.85em' }}>
+                <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85em' }}>
                   {contarCredenciais(pessoa.name)} {contarCredenciais(pessoa.name) === 1 ? 'credencial' : 'credenciais'}
                 </span>
               </button>
