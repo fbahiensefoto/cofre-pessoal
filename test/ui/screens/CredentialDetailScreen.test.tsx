@@ -1,0 +1,70 @@
+// @vitest-environment jsdom
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/preact';
+import type { Credential } from '../../../src/core/model/credential';
+import type { VaultSessionContextValue } from '../../../src/ui/state/VaultSessionContext';
+import * as VaultSessionContext from '../../../src/ui/state/VaultSessionContext';
+import { CredentialDetailScreen } from '../../../src/ui/screens/CredentialDetailScreen';
+
+function sampleCredential(): Credential {
+  return {
+    id: 'id-detalhe',
+    serviceName: 'Serviço Detalhe',
+    category: 'site',
+    username: 'usuario.ficticio',
+    password: 'senha-secreta-ficticia',
+    notes: 'observação fictícia',
+    tags: ['trabalho'],
+    favorite: false,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+  };
+}
+
+function mockSession(credentials: Credential[]): VaultSessionContextValue {
+  return {
+    credentials,
+    addCredential: vi.fn(),
+    updateCredential: vi.fn(),
+    deleteCredential: vi.fn(),
+    toggleFavorite: vi.fn(),
+    lock: vi.fn(),
+  };
+}
+
+describe('CredentialDetailScreen', () => {
+  it('mostra os dados da credencial com a senha oculta por padrão', () => {
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession([sampleCredential()]));
+    render(<CredentialDetailScreen credentialId="id-detalhe" onBack={() => {}} onEdit={() => {}} />);
+
+    expect(screen.getByText('Serviço Detalhe')).toBeTruthy();
+    expect(screen.getByText('usuario.ficticio')).toBeTruthy();
+    expect(screen.queryByText('senha-secreta-ficticia')).toBeNull();
+  });
+
+  it('revela e oculta a senha ao clicar no botão', () => {
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession([sampleCredential()]));
+    render(<CredentialDetailScreen credentialId="id-detalhe" onBack={() => {}} onEdit={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /revelar senha/i }));
+    expect(screen.getByText('senha-secreta-ficticia')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: /ocultar senha/i }));
+    expect(screen.queryByText('senha-secreta-ficticia')).toBeNull();
+  });
+
+  it('não tem nenhum botão de copiar', () => {
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession([sampleCredential()]));
+    render(<CredentialDetailScreen credentialId="id-detalhe" onBack={() => {}} onEdit={() => {}} />);
+    expect(screen.queryByRole('button', { name: /copiar/i })).toBeNull();
+  });
+
+  it('chama onEdit ao clicar em editar', () => {
+    const onEdit = vi.fn();
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession([sampleCredential()]));
+    render(<CredentialDetailScreen credentialId="id-detalhe" onBack={() => {}} onEdit={onEdit} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /editar/i }));
+    expect(onEdit).toHaveBeenCalledWith('id-detalhe');
+  });
+});
