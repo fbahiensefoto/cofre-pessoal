@@ -16,7 +16,7 @@ export function PasswordStrengthMeter(props: { password: string }) {
   const largura = NIVEL_PARA_LARGURA[nivel];
 
   return (
-    <div>
+    <div style={{ marginTop: '8px' }}>
       <div
         role="progressbar"
         aria-label="Força da senha"

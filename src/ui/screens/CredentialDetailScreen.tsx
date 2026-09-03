@@ -60,7 +60,7 @@ export function CredentialDetailScreen(props: { credentialId: string; onBack: ()
           <p>
             <strong>Usuário:</strong> {credencial.username}
           </p>
-          <button type="button" onClick={() => handleCopy('usuario', credencial.username!)}>
+          <button type="button" onClick={() => handleCopy('usuario', credencial.username!)} style={{ marginTop: '16px' }}>
             {copiado === 'usuario' ? 'Copiado!' : 'Copiar usuário'}
           </button>
         </>
@@ -72,12 +72,14 @@ export function CredentialDetailScreen(props: { credentialId: string; onBack: ()
           {senhaVisivel ? credencial.password : '••••••••'}
         </span>
       </p>
-      <button type="button" onClick={() => setSenhaVisivel((v) => !v)}>
-        {senhaVisivel ? 'Ocultar senha' : 'Revelar senha'}
-      </button>
-      <button type="button" onClick={() => handleCopy('senha', credencial.password)}>
-        {copiado === 'senha' ? 'Copiado!' : 'Copiar senha'}
-      </button>
+      <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+        <button type="button" onClick={() => setSenhaVisivel((v) => !v)}>
+          {senhaVisivel ? 'Ocultar senha' : 'Revelar senha'}
+        </button>
+        <button type="button" onClick={() => handleCopy('senha', credencial.password)}>
+          {copiado === 'senha' ? 'Copiado!' : 'Copiar senha'}
+        </button>
+      </div>
 
       {credencial.notes && (
         <p>
@@ -85,7 +87,7 @@ export function CredentialDetailScreen(props: { credentialId: string; onBack: ()
         </p>
       )}
 
-      <button type="button" onClick={() => props.onEdit(credencial.id)}>
+      <button type="button" onClick={() => props.onEdit(credencial.id)} style={{ marginTop: '16px' }}>
         Editar
       </button>
     </div>

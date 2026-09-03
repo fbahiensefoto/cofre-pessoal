@@ -1,15 +1,58 @@
 import { useCallback, useEffect, useState } from 'preact/hooks';
+import { readThemePref, writeThemePref } from './prefsStorage';
 
 export type ThemePreference = 'auto' | 'light' | 'dark';
 
 const STORAGE_KEY = 'cofre-pessoal-theme';
 
-function applyTheme(preference: ThemePreference) {
+export function ehPreferenciaValida(valor: unknown): valor is ThemePreference {
+  return valor === 'light' || valor === 'dark' || valor === 'auto';
+}
+
+export function applyTheme(preference: ThemePreference) {
   if (preference === 'auto') {
     document.documentElement.removeAttribute('data-theme');
   } else {
     document.documentElement.dataset.theme = preference;
   }
+}
+
+/**
+ * Roda uma vez, no carregamento do app (chamada em main.tsx) — não presa ao
+ * ciclo de vida de nenhum componente. Relatado no aparelho real: a
+ * preferência de tema volta pro claro sozinha depois de fechar e reabrir o
+ * app, ou seja, o localStorage não está sobrevivendo entre sessões nesse
+ * navegador, mesmo com a escolha salva corretamente na hora. O IndexedDB
+ * usado pelo cofre já provou ser resistente a isso; guardamos a preferência
+ * lá também (writeThemePref, em setPreference) e usamos aqui pra "curar" o
+ * localStorage se ele tiver esvaziado sozinho.
+ *
+ * Antes vivia como useEffect dentro de useTheme(), mas só SettingsScreen usa
+ * esse hook — a cura só rodava se a pessoa abrisse Configurações depois de
+ * reabrir o app, não no carregamento em si. Ficar fora do ciclo de
+ * montagem/desmontagem de componente também evita ter que reconciliar uma
+ * leitura assíncrona de IndexedDB com o React desmontando a árvore no meio
+ * do caminho (foi exatamente isso que expôs uma corrida nos testes de
+ * SettingsScreen).
+ */
+export async function reconcileThemeFromIndexedDB(): Promise<void> {
+  let salvo: string | undefined;
+  try {
+    salvo = await readThemePref();
+  } catch {
+    return;
+  }
+  if (!ehPreferenciaValida(salvo)) return;
+
+  try {
+    const noLocalStorage = localStorage.getItem(STORAGE_KEY);
+    if (noLocalStorage === salvo) return;
+    localStorage.setItem(STORAGE_KEY, salvo);
+  } catch {
+    // Sem conseguir gravar no localStorage agora, ainda aplicamos o tema
+    // certo nesta carga da página via applyTheme abaixo.
+  }
+  applyTheme(salvo);
 }
 
 export function useTheme() {
@@ -19,7 +62,7 @@ export function useTheme() {
       // Sem preferência salva: padrão é escuro (pedido explícito), não
       // acompanhar o tema do sistema — "Automático" continua disponível nas
       // configurações pra quem quiser esse comportamento.
-      return salvo === 'light' || salvo === 'dark' || salvo === 'auto' ? salvo : 'dark';
+      return ehPreferenciaValida(salvo) ? salvo : 'dark';
     } catch {
       // Navegador configurado para bloquear dados de site: localStorage lança
       // ao ser acessado. Isso roda dentro do inicializador de useState (ou
@@ -29,6 +72,13 @@ export function useTheme() {
     }
   });
 
+  // Aplica no <html> a cada mudança de preference, incluindo a montagem
+  // inicial — sem indexedDB nem promise aqui dentro, só a mutação de DOM
+  // síncrona; isso nunca foi a causa da corrida vista nos testes (essa era
+  // só a reconciliação assíncrona, já movida pra reconcileThemeFromIndexedDB).
+  // Fora dos testes, o script inline em index.html já aplicou o tema certo
+  // antes desta primeira renderização — isso aqui só faz o hook não depender
+  // dele pra ficar coerente em qualquer contexto que use o hook sozinho.
   useEffect(() => {
     applyTheme(preference);
   }, [preference]);
@@ -44,6 +94,10 @@ export function useTheme() {
       // sessão — só significa que a escolha não sobrevive entre sessões
       // neste navegador.
     }
+    writeThemePref(next).catch(() => {
+      // Mesma lógica: se nem o reforço no IndexedDB conseguir gravar, o
+      // tema ainda troca normalmente nesta sessão.
+    });
     setPreferenceState(next);
   }, []);
 

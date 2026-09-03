@@ -123,7 +123,7 @@ export function SettingsScreen(props: { repository: VaultRepository; onBack: () 
         </form>
       </section>
 
-      <button type="button" onClick={lock}>
+      <button type="button" onClick={lock} style={{ marginTop: '16px' }}>
         Bloquear cofre
       </button>
     </div>
