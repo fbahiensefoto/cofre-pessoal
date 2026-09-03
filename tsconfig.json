@@ -10,7 +10,9 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "types": ["node"]
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "types": ["node", "vite/client"]
   },
   "include": ["src", "test"]
 }
