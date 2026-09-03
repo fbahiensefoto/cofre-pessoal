@@ -66,9 +66,9 @@ export function PeopleScreen(props: { onSelectPerson: (name: string) => void; on
       <input id="busca-pessoas" type="search" value={busca} onInput={(e) => setBusca((e.target as HTMLInputElement).value)} />
 
       {pessoasFiltradas.length === 0 ? (
-        <p>Nenhuma pessoa encontrada.</p>
+        <p style={{ marginTop: '16px' }}>Nenhuma pessoa encontrada.</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0 0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {pessoasFiltradas.map((pessoa) => (
             <li key={pessoa.id}>
               <button

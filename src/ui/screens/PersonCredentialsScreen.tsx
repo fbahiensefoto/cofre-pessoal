@@ -43,16 +43,16 @@ export function PersonCredentialsScreen(props: {
       />
 
       {filtradas.length === 0 ? (
-        <p>Nenhuma credencial encontrada.</p>
+        <p style={{ marginTop: '16px' }}>Nenhuma credencial encontrada.</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0 0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {filtradas.map((c) => (
             <CredentialListItem key={c.id} credential={c} onSelect={props.onSelectCredential} onToggleFavorite={toggleFavorite} />
           ))}
         </ul>
       )}
 
-      <button type="button" onClick={props.onCreateNew}>
+      <button type="button" onClick={props.onCreateNew} style={{ marginTop: '16px' }}>
         Adicionar credencial
       </button>
     </div>

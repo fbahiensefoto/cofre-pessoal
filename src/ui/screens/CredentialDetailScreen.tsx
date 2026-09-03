@@ -1,12 +1,28 @@
-import { useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { useVaultSession } from '../state/VaultSessionContext';
 import { CategoryBadge } from '../components/CategoryBadge';
 import { TagList } from '../components/TagList';
 import { ChevronLeftIcon } from '../components/icons';
+import { copyToClipboard } from '../lib/clipboard';
+
+type CampoCopiado = 'usuario' | 'senha' | null;
 
 export function CredentialDetailScreen(props: { credentialId: string; onBack: () => void; onEdit: (id: string) => void }) {
   const { credentials } = useVaultSession();
   const [senhaVisivel, setSenhaVisivel] = useState(false);
+  const [copiado, setCopiado] = useState<CampoCopiado>(null);
+  const limparCopiadoRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  function handleCopy(campo: Exclude<CampoCopiado, null>, valor: string) {
+    copyToClipboard(valor)
+      .then((sucesso) => {
+        if (!sucesso) return;
+        setCopiado(campo);
+        clearTimeout(limparCopiadoRef.current);
+        limparCopiadoRef.current = setTimeout(() => setCopiado(null), 2000);
+      })
+      .catch(() => {});
+  }
 
   const credencial = credentials.find((c) => c.id === props.credentialId);
   if (!credencial) {
@@ -40,9 +56,14 @@ export function CredentialDetailScreen(props: { credentialId: string; onBack: ()
         </p>
       )}
       {credencial.username && (
-        <p>
-          <strong>Usuário:</strong> {credencial.username}
-        </p>
+        <>
+          <p>
+            <strong>Usuário:</strong> {credencial.username}
+          </p>
+          <button type="button" onClick={() => handleCopy('usuario', credencial.username!)}>
+            {copiado === 'usuario' ? 'Copiado!' : 'Copiar usuário'}
+          </button>
+        </>
       )}
 
       <p>
@@ -53,6 +74,9 @@ export function CredentialDetailScreen(props: { credentialId: string; onBack: ()
       </p>
       <button type="button" onClick={() => setSenhaVisivel((v) => !v)}>
         {senhaVisivel ? 'Ocultar senha' : 'Revelar senha'}
+      </button>
+      <button type="button" onClick={() => handleCopy('senha', credencial.password)}>
+        {copiado === 'senha' ? 'Copiado!' : 'Copiar senha'}
       </button>
 
       {credencial.notes && (
