@@ -10,7 +10,7 @@ export function ConfirmDialog(props: {
   }
 
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+    <div role="dialog" aria-labelledby="confirm-dialog-title">
       <div style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', padding: '16px', borderRadius: '8px' }}>
         <h2 id="confirm-dialog-title">{props.title}</h2>
         <p>{props.message}</p>

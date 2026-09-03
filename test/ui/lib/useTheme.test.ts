@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/preact';
 import { useTheme } from '../../../src/ui/lib/useTheme';
 
@@ -12,6 +12,7 @@ describe('useTheme', () => {
   afterEach(() => {
     localStorage.clear();
     document.documentElement.removeAttribute('data-theme');
+    vi.restoreAllMocks();
   });
 
   it('começa em "auto" quando não há preferência salva', () => {
@@ -33,5 +34,25 @@ describe('useTheme', () => {
     localStorage.setItem('cofre-pessoal-theme', 'light');
     const { result } = renderHook(() => useTheme());
     expect(result.current.preference).toBe('light');
+  });
+
+  it('cai para "auto" sem quebrar quando localStorage.getItem lança (navegador bloqueando dados de site)', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('acesso a localStorage bloqueado');
+    });
+
+    const { result } = renderHook(() => useTheme());
+
+    expect(result.current.preference).toBe('auto');
+  });
+
+  it('setPreference não lança quando localStorage.setItem lança', () => {
+    const { result } = renderHook(() => useTheme());
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('acesso a localStorage bloqueado');
+    });
+
+    expect(() => act(() => result.current.setPreference('dark'))).not.toThrow();
+    expect(result.current.preference).toBe('dark');
   });
 });

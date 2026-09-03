@@ -12,6 +12,7 @@ export default defineConfig({
         name: 'Cofre Pessoal',
         short_name: 'Cofre Pessoal',
         description: 'Gerenciador de senhas local — os dados nunca saem do seu aparelho.',
+        lang: 'pt-BR',
         theme_color: '#1a1a2e',
         background_color: '#1a1a2e',
         display: 'standalone',

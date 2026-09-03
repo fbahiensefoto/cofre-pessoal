@@ -10,7 +10,7 @@ import { VaultStorage } from '../../../src/core/vault/vaultStorage';
 import { VaultSessionProvider, useVaultSession } from '../../../src/ui/state/VaultSessionContext';
 
 function TestConsumer() {
-  const { credentials, addCredential, deleteCredential, toggleFavorite, lock } = useVaultSession();
+  const { credentials, addCredential, updateCredential, deleteCredential, toggleFavorite, lock } = useVaultSession();
   return (
     <div>
       <span data-testid="count">{credentials.length}</span>
@@ -32,6 +32,19 @@ function TestConsumer() {
           <span>{c.serviceName}</span>
           <span data-testid={`fav-${c.id}`}>{String(c.favorite)}</span>
           <button onClick={() => toggleFavorite(c.id)}>favoritar {c.id}</button>
+          <button
+            onClick={() =>
+              updateCredential(c.id, {
+                serviceName: `${c.serviceName} Editado`,
+                category: c.category,
+                password: c.password,
+                tags: c.tags,
+                favorite: c.favorite,
+              })
+            }
+          >
+            editar {c.id}
+          </button>
           <button onClick={() => deleteCredential(c.id)}>excluir {c.id}</button>
         </div>
       ))}
@@ -63,7 +76,7 @@ describe('VaultSessionContext', () => {
     });
   });
 
-  it('adiciona, favorita e exclui uma credencial, persistindo a cada ação', async () => {
+  it('adiciona, favorita, edita e exclui uma credencial, persistindo a cada ação', async () => {
     await repository.createVault('senha-ficticia', params);
     const { session, credentials } = await repository.openSession('senha-ficticia');
     let bloqueado = false;
@@ -88,6 +101,15 @@ describe('VaultSessionContext', () => {
     const id = credenciais2[0]!.id;
     fireEvent.click(screen.getByText(`favoritar ${id}`));
     await waitFor(() => expect(screen.getByTestId(`fav-${id}`).textContent).toBe('true'));
+
+    fireEvent.click(screen.getByText(`editar ${id}`));
+    await waitFor(() => expect(screen.getByText('Serviço Teste Editado')).toBeTruthy());
+
+    // Confirma que a edição persistiu de verdade: abre outra sessão nova.
+    const { session: sessao3, credentials: credenciais3 } = await repository.openSession('senha-ficticia');
+    expect(credenciais3).toHaveLength(1);
+    expect(credenciais3[0]?.serviceName).toBe('Serviço Teste Editado');
+    repository.closeSession(sessao3);
 
     fireEvent.click(screen.getByText(`excluir ${id}`));
     await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('0'));
