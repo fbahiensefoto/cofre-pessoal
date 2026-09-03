@@ -20,13 +20,13 @@ function sampleCredential(overrides: Partial<Credential> = {}): Credential {
 }
 
 describe('CredentialListItem', () => {
-  it('mostra nome do serviço, pessoa, categoria e tags', () => {
+  it('mostra nome do serviço, categoria e tags (a pessoa não aparece aqui — a lista já é dela)', () => {
     render(<CredentialListItem credential={sampleCredential()} onSelect={() => {}} onToggleFavorite={() => {}} />);
     expect(screen.getByText('Serviço Item Teste')).toBeTruthy();
-    expect(screen.getByText('Cíntia de Souza')).toBeTruthy();
     expect(screen.getByText('e-mail')).toBeTruthy();
     expect(screen.getByText('pessoal')).toBeTruthy();
     expect(screen.getByText('importante')).toBeTruthy();
+    expect(screen.queryByText('Cíntia de Souza')).toBeNull();
   });
 
   it('chama onSelect ao clicar no item', () => {

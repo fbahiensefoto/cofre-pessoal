@@ -22,7 +22,12 @@ function emptyForm(owner: string): FormData {
   };
 }
 
-export function CredentialFormScreen(props: { credentialId?: string; initialOwner: string; onDone: () => void; onCancel: () => void }) {
+export function CredentialFormScreen(props: {
+  credentialId?: string;
+  initialOwner: string;
+  onDone: (savedOwner: string) => void;
+  onCancel: () => void;
+}) {
   const { people, credentials, addCredential, updateCredential, deleteCredential } = useVaultSession();
   const existente = props.credentialId ? credentials.find((c) => c.id === props.credentialId) : undefined;
   // Credenciais criadas antes da categoria virar uma lista fixa podem ter um valor fora
@@ -71,7 +76,10 @@ export function CredentialFormScreen(props: { credentialId?: string; initialOwne
       } else {
         await addCredential(dados);
       }
-      props.onDone();
+      // Reporta a pessoa realmente salva, não a de quando o formulário abriu —
+      // trocar a Pessoa aqui move a credencial para a página dela; navegar de
+      // volta para a pessoa antiga a deixaria "sumida" da tela em que estava.
+      props.onDone(dados.owner);
     } catch {
       setErro('Não foi possível salvar a credencial. Tente novamente.');
     } finally {
@@ -84,7 +92,7 @@ export function CredentialFormScreen(props: { credentialId?: string; initialOwne
     setErro(null);
     try {
       await deleteCredential(props.credentialId);
-      props.onDone();
+      props.onDone(props.initialOwner);
     } catch {
       setErro('Não foi possível excluir a credencial. Tente novamente.');
     }

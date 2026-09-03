@@ -84,6 +84,27 @@ describe('CredentialFormScreen', () => {
     expect(addCredential.mock.calls[0]![0]).toMatchObject({ owner: 'Cíntia de Souza' });
   });
 
+  it('modo edição: trocar a pessoa e salvar chama onDone com a pessoa NOVA, não a de quando o formulário abriu', async () => {
+    // Reproduz o bug achado numa revisão de design: onDone devolvendo o
+    // initialOwner (capturado na abertura do formulário) em vez do valor
+    // realmente salvo fazia o app navegar de volta para a página da pessoa
+    // ANTIGA — agora vazia — como se a credencial tivesse sumido.
+    const updateCredential = vi.fn().mockResolvedValue(undefined);
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ updateCredential }));
+    const onDone = vi.fn();
+
+    render(<CredentialFormScreen credentialId="id-form" initialOwner="Cíntia de Souza" onDone={onDone} onCancel={() => {}} />);
+
+    fireEvent.change(screen.getByLabelText(/^pessoa/i), { target: { value: 'Fábio Bahiense' } });
+    fireEvent.click(screen.getByRole('button', { name: /salvar/i }));
+
+    await waitFor(() =>
+      expect(updateCredential).toHaveBeenCalledWith('id-form', expect.objectContaining({ owner: 'Fábio Bahiense' })),
+    );
+    expect(onDone).toHaveBeenCalledWith('Fábio Bahiense');
+    expect(onDone).not.toHaveBeenCalledWith('Cíntia de Souza');
+  });
+
   it('modo edição: preenche os campos (pessoa incluída) e chama updateCredential ao salvar', async () => {
     const updateCredential = vi.fn().mockResolvedValue(undefined);
     vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ updateCredential }));
@@ -122,7 +143,7 @@ describe('CredentialFormScreen', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /confirmar/i }));
     await waitFor(() => expect(deleteCredential).toHaveBeenCalledWith('id-form'));
-    expect(onDone).toHaveBeenCalled();
+    expect(onDone).toHaveBeenCalledWith('Cíntia de Souza');
   });
 
   it('cancelar a exclusão não chama deleteCredential', () => {

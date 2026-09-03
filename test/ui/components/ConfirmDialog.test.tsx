@@ -25,4 +25,15 @@ describe('ConfirmDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: /confirmar/i }));
     expect(onConfirm).toHaveBeenCalled();
   });
+
+  it('fica fixo cobrindo a tela (não solto no fluxo normal da página)', () => {
+    render(<ConfirmDialog open title="Excluir" message="Tem certeza?" onConfirm={() => {}} onCancel={() => {}} />);
+
+    const dialog = screen.getByRole('dialog');
+    // Sem position:fixed, o diálogo pode renderizar fora da área visível em
+    // formulários compridos — reproduzido de verdade numa revisão de design
+    // (o wrapper apareceu 100px abaixo do fim da tela ao abrir "Excluir").
+    expect(dialog.style.position).toBe('fixed');
+    expect(dialog.style.inset).toBe('0px');
+  });
 });

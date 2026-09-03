@@ -111,7 +111,7 @@ export function App() {
         <CredentialFormScreen
           credentialId={mainView.id}
           initialOwner={mainView.owner}
-          onDone={() => setMainView({ view: 'person', owner: mainView.owner })}
+          onDone={(savedOwner) => setMainView({ view: 'person', owner: savedOwner })}
           onCancel={() => setMainView({ view: 'person', owner: mainView.owner })}
         />
       )}

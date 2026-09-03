@@ -46,7 +46,7 @@ export function PersonCredentialsScreen(props: {
       ) : (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {filtradas.map((c) => (
-            <CredentialListItem key={c.id} credential={c} onSelect={props.onSelectCredential} onToggleFavorite={toggleFavorite} showOwner={false} />
+            <CredentialListItem key={c.id} credential={c} onSelect={props.onSelectCredential} onToggleFavorite={toggleFavorite} />
           ))}
         </ul>
       )}

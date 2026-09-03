@@ -10,8 +10,29 @@ export function ConfirmDialog(props: {
   }
 
   return (
-    <div role="dialog" aria-labelledby="confirm-dialog-title">
-      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '16px', borderRadius: '8px' }}>
+    <div
+      role="dialog"
+      aria-labelledby="confirm-dialog-title"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        background: 'rgba(0, 0, 0, 0.6)',
+      }}
+    >
+      <div
+        style={{
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          padding: '16px',
+          borderRadius: '8px',
+          maxWidth: '400px',
+          width: '100%',
+        }}
+      >
         <h2 id="confirm-dialog-title">{props.title}</h2>
         <p>{props.message}</p>
         <button type="button" onClick={props.onCancel}>
