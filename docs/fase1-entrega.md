@@ -58,6 +58,13 @@ margem de segurança contra ataques offline.
   isso é Fase 2.
 - Sem backup/restauração como funcionalidade de usuário — Fase 5, mas o
   formato do cofre criado aqui já é o que será usado no backup.
+- Risco real de perda de dados no iOS: o Safari pode descartar ("evict") o
+  IndexedDB de um site após cerca de 7 dias sem interação, exceto quando o
+  site foi adicionado à tela de início (instalado como PWA) — nesse caso essa
+  política de descarte não se aplica. Como esta fase ainda não tem
+  backup/restauração (Fase 5) e o IndexedDB é hoje a única cópia do cofre,
+  isso torna "adicionar à tela de início" um requisito prático, não apenas
+  uma conveniência, até que o backup exista.
 - Limpeza de memória: `sodium.memzero(buffer)` é chamado nos `Uint8Array`
   que representam a KEK e a DEK assim que deixam de ser necessários, mas
   isso é uma mitigação best-effort — o V8 (motor JS) não garante que uma

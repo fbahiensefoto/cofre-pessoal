@@ -80,14 +80,30 @@ describe('VaultRepository', () => {
   });
 
   it('changeMasterPassword: senha antiga passa a falhar, nova funciona, dados preservados', async () => {
-    await repo.createVault('senha-antiga-ficticia', params);
+    const senhaCredencial = 'senha-da-credencial-rotacao-ficticia-4r8p';
+    const nomeServico = 'Serviço Fictício De Rotação ABC';
+    const credencial: Credential = {
+      id: 'id-ficticio-004',
+      serviceName: nomeServico,
+      category: 'e-mail',
+      username: 'usuario.rotacao.ficticio@exemplo.invalido',
+      password: senhaCredencial,
+      tags: [],
+      favorite: false,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
+
+    await repo.createVault('senha-antiga-ficticia', params, [credencial]);
 
     await repo.changeMasterPassword('senha-antiga-ficticia', 'senha-nova-ficticia', params);
 
     await expect(repo.openVault('senha-antiga-ficticia')).rejects.toThrow(VaultAuthenticationFailedError);
 
     const credenciais = await repo.openVault('senha-nova-ficticia');
-    expect(credenciais).toEqual([]);
+    expect(credenciais).toHaveLength(1);
+    expect(credenciais[0]?.serviceName).toBe(nomeServico);
+    expect(credenciais[0]?.password).toBe(senhaCredencial);
   });
 
   it('o registro no IndexedDB não contém a senha mestra nem dados de credenciais em texto puro', async () => {
