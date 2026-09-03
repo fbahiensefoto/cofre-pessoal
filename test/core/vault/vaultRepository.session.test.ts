@@ -101,6 +101,19 @@ describe('VaultRepository — sessão', () => {
     expect(copiaAntes.some((b) => b !== 0)).toBe(true);
   });
 
+  it('closeSession marca a sessão como fechada, e saveCredentials nela passa a lançar erro', async () => {
+    await repo.createVault('senha-ficticia', params);
+    const { session } = await repo.openSession('senha-ficticia');
+
+    expect(session.closed).toBe(false);
+    repo.closeSession(session);
+    expect(session.closed).toBe(true);
+
+    // Sem essa checagem, isto criptografaria com uma DEK zerada e destruiria
+    // o cofre bom — ver Fix 5 da revisão final da Fase 2.
+    await expect(repo.saveCredentials(session, [sampleCredential()])).rejects.toThrow('Sessão já foi bloqueada.');
+  });
+
   it('saveCredentials com sessão aberta antes de um changeMasterPassword ainda produz um cofre abrível com a nova senha', async () => {
     await repo.createVault('senha-ficticia', params);
     const { session } = await repo.openSession('senha-ficticia');

@@ -10,7 +10,7 @@ import { VaultStorage } from './vaultStorage';
 
 export interface VaultSession {
   dek: Uint8Array;
-  header: VaultHeader;
+  closed: boolean;
 }
 
 export class VaultRepository {
@@ -102,19 +102,22 @@ export class VaultRepository {
     const dek = this.keyManager.unwrapDek(file.header, file.wrappedDek, masterPassword);
     const credentials = this.decryptPayload(file.header, file, dek);
 
-    return { session: { dek, header: file.header }, credentials };
+    return { session: { dek, closed: false }, credentials };
   }
 
   async saveCredentials(session: VaultSession, credentials: Credential[]): Promise<void> {
+    if (session.closed) {
+      throw new Error('Sessão já foi bloqueada.');
+    }
+
     const bytes = await this.storage.readBytes();
     const file = VaultFile.fromBytes(bytes);
 
-    // Usa file.header (lido agora do storage), não session.header (capturado em
-    // openSession e potencialmente desatualizado): wrapNewDek/rewrapDek geram um
+    // Usa file.header (lido agora do storage): wrapNewDek/rewrapDek geram um
     // header novo (salt novo) a cada chamada e autenticam wrappedDek contra os
     // bytes desse header novo. Se changeMasterPassword rodou depois que esta
     // sessão foi aberta, file.header e file.wrappedDek já formam o par
-    // consistente e atual — persistir session.header (antigo) junto com
+    // consistente e atual — persistir um header desatualizado junto com
     // file.wrappedDek (novo) deixaria essa dupla inconsistente e o cofre
     // permanentemente inabrível, mesmo com a senha nova correta. session.dek
     // continua válido para reuso: changeMasterPassword reembrulha a mesma DEK,
@@ -130,6 +133,7 @@ export class VaultRepository {
 
   closeSession(session: VaultSession): void {
     this.sodium.memzero(session.dek);
+    session.closed = true;
   }
 
   private encryptPayload(header: VaultHeader, wrapped: WrappedDek, dek: Uint8Array, credentials: Credential[]): VaultFile {

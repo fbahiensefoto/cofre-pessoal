@@ -5,7 +5,7 @@ import { TagList } from './TagList';
 export function CredentialListItem(props: {
   credential: Credential;
   onSelect: (id: string) => void;
-  onToggleFavorite: (id: string) => void;
+  onToggleFavorite: (id: string) => Promise<void> | void;
 }) {
   const { credential } = props;
 
@@ -16,7 +16,11 @@ export function CredentialListItem(props: {
         aria-label={credential.favorite ? 'Remover dos favoritos' : 'Marcar como favorito'}
         onClick={(e) => {
           e.stopPropagation();
-          props.onToggleFavorite(credential.id);
+          // onToggleFavorite pode devolver uma Promise (o toggleFavorite real do
+          // VaultSessionContext devolve); um item de lista não é o lugar certo
+          // para mostrar erro de uma ação de baixo risco como favoritar — só não
+          // podemos deixar a rejeição sem tratamento nenhum.
+          Promise.resolve(props.onToggleFavorite(credential.id)).catch(() => {});
         }}
         style={{ minWidth: '44px', minHeight: '44px' }}
       >

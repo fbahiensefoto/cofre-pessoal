@@ -31,6 +31,7 @@ export function CredentialFormScreen(props: { credentialId?: string; onDone: () 
   const [tagsTexto, setTagsTexto] = useState(existente ? existente.tags.join(', ') : '');
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
   function updateField<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -38,6 +39,7 @@ export function CredentialFormScreen(props: { credentialId?: string; onDone: () 
 
   async function handleSubmit(event: Event) {
     event.preventDefault();
+    setErro(null);
     setSalvando(true);
     const dados: FormData = {
       ...form,
@@ -53,6 +55,8 @@ export function CredentialFormScreen(props: { credentialId?: string; onDone: () 
         await addCredential(dados);
       }
       props.onDone();
+    } catch {
+      setErro('Não foi possível salvar a credencial. Tente novamente.');
     } finally {
       setSalvando(false);
     }
@@ -60,8 +64,13 @@ export function CredentialFormScreen(props: { credentialId?: string; onDone: () 
 
   async function handleConfirmDelete() {
     if (!props.credentialId) return;
-    await deleteCredential(props.credentialId);
-    props.onDone();
+    setErro(null);
+    try {
+      await deleteCredential(props.credentialId);
+      props.onDone();
+    } catch {
+      setErro('Não foi possível excluir a credencial. Tente novamente.');
+    }
   }
 
   return (
@@ -110,6 +119,12 @@ export function CredentialFormScreen(props: { credentialId?: string; onDone: () 
           />
           Favorito
         </label>
+
+        {erro && (
+          <p role="alert" style={{ color: 'var(--color-danger)' }}>
+            {erro}
+          </p>
+        )}
 
         <button type="submit" disabled={salvando}>
           Salvar
