@@ -1,0 +1,96 @@
+import type { Sodium } from '../crypto/sodiumProvider';
+import { AeadCipher } from '../crypto/aeadCipher';
+import type { Argon2Params } from '../crypto/keyDerivation';
+import type { Credential } from '../model/credential';
+import { VaultAuthenticationFailedError, VaultNotFoundError, VaultUnsupportedVersionError } from './vaultExceptions';
+import { VaultFile } from './vaultFormat';
+import { CURRENT_VERSION, VaultHeader } from './vaultHeader';
+import { VaultKeyManager, type WrappedDek } from './vaultKeyManager';
+import { VaultStorage } from './vaultStorage';
+
+export class VaultRepository {
+  private readonly keyManager: VaultKeyManager;
+  private readonly aead: AeadCipher;
+
+  constructor(
+    private readonly sodium: Sodium,
+    private readonly storage: VaultStorage,
+  ) {
+    this.keyManager = new VaultKeyManager(sodium);
+    this.aead = new AeadCipher(sodium);
+  }
+
+  /**
+   * [initialCredentials] existe só para permitir testar nesta fase que
+   * credenciais não aparecem em texto puro no IndexedDB. CRUD completo
+   * (adicionar após a criação, editar, listar) é Fase 2.
+   */
+  async createVault(masterPassword: string, params: Argon2Params, initialCredentials: Credential[] = []): Promise<void> {
+    const dek = this.keyManager.generateDek();
+    try {
+      const { header, wrapped } = this.keyManager.wrapNewDek(dek, masterPassword, params);
+      const file = this.encryptPayload(header, wrapped, dek, initialCredentials);
+      await this.storage.writeAtomic(file.toBytes());
+    } finally {
+      this.sodium.memzero(dek);
+    }
+  }
+
+  async openVault(masterPassword: string): Promise<Credential[]> {
+    if (!(await this.storage.exists())) {
+      throw new VaultNotFoundError();
+    }
+
+    const bytes = await this.storage.readBytes();
+    const file = VaultFile.fromBytes(bytes);
+
+    if (file.header.formatVersion !== CURRENT_VERSION) {
+      throw new VaultUnsupportedVersionError(file.header.formatVersion);
+    }
+
+    const dek = this.keyManager.unwrapDek(file.header, file.wrappedDek, masterPassword);
+    try {
+      return this.decryptPayload(file.header, file, dek);
+    } finally {
+      this.sodium.memzero(dek);
+    }
+  }
+
+  async changeMasterPassword(currentPassword: string, newPassword: string, params: Argon2Params): Promise<void> {
+    if (!(await this.storage.exists())) {
+      throw new VaultNotFoundError();
+    }
+
+    const bytes = await this.storage.readBytes();
+    const file = VaultFile.fromBytes(bytes);
+
+    if (file.header.formatVersion !== CURRENT_VERSION) {
+      throw new VaultUnsupportedVersionError(file.header.formatVersion);
+    }
+
+    const dek = this.keyManager.unwrapDek(file.header, file.wrappedDek, currentPassword);
+    try {
+      const { header, wrapped } = this.keyManager.rewrapDek(dek, newPassword, params);
+      const newFile = new VaultFile(header, wrapped, file.dataNonce, file.dataCiphertext);
+      await this.storage.writeAtomic(newFile.toBytes());
+    } finally {
+      this.sodium.memzero(dek);
+    }
+  }
+
+  private encryptPayload(header: VaultHeader, wrapped: WrappedDek, dek: Uint8Array, credentials: Credential[]): VaultFile {
+    const payload = new TextEncoder().encode(JSON.stringify(credentials));
+    const nonce = this.aead.generateNonce();
+    const ciphertext = this.aead.encrypt(payload, nonce, dek, header.dataAad);
+    return new VaultFile(header, wrapped, nonce, ciphertext);
+  }
+
+  private decryptPayload(header: VaultHeader, file: VaultFile, dek: Uint8Array): Credential[] {
+    try {
+      const plain = this.aead.decrypt(file.dataCiphertext, file.dataNonce, dek, header.dataAad);
+      return JSON.parse(new TextDecoder().decode(plain)) as Credential[];
+    } catch {
+      throw new VaultAuthenticationFailedError();
+    }
+  }
+}
