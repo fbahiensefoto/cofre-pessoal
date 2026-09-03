@@ -5,6 +5,7 @@ import type { Credential } from '../../core/model/credential';
 import type { Person } from '../../core/model/person';
 import type { VaultSession } from '../../core/vault/vaultRepository';
 import { VaultRepository } from '../../core/vault/vaultRepository';
+import { generateId } from '../lib/generateId';
 
 export interface VaultSessionContextValue {
   people: Person[];
@@ -34,7 +35,7 @@ function derivarPessoasOrfas(pessoasRegistradas: Person[], credenciais: Credenti
   const nomesRegistrados = new Set(pessoasRegistradas.map((p) => p.name));
   const nomesOrfaos = [...new Set(credenciais.map((c) => c.owner).filter((nome) => nome && !nomesRegistrados.has(nome)))];
   const agora = new Date().toISOString();
-  return nomesOrfaos.map((nome) => ({ id: crypto.randomUUID(), name: nome, createdAt: agora, updatedAt: agora }));
+  return nomesOrfaos.map((nome) => ({ id: generateId(), name: nome, createdAt: agora, updatedAt: agora }));
 }
 
 export function VaultSessionProvider(props: {
@@ -69,7 +70,7 @@ export function VaultSessionProvider(props: {
         return existente;
       }
       const now = new Date().toISOString();
-      const novaPessoa: Person = { id: crypto.randomUUID(), name: nomeNormalizado, createdAt: now, updatedAt: now };
+      const novaPessoa: Person = { id: generateId(), name: nomeNormalizado, createdAt: now, updatedAt: now };
       await persist([...people, novaPessoa], credentials);
       return novaPessoa;
     },
@@ -79,7 +80,7 @@ export function VaultSessionProvider(props: {
   const addCredential = useCallback(
     async (input: Omit<Credential, 'id' | 'createdAt' | 'updatedAt'>) => {
       const now = new Date().toISOString();
-      const novaCredencial: Credential = { ...input, id: crypto.randomUUID(), createdAt: now, updatedAt: now };
+      const novaCredencial: Credential = { ...input, id: generateId(), createdAt: now, updatedAt: now };
       await persist(people, [...credentials, novaCredencial]);
     },
     [people, credentials, persist],

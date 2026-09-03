@@ -15,9 +15,18 @@ describe('useTheme', () => {
     vi.restoreAllMocks();
   });
 
-  it('começa em "auto" quando não há preferência salva', () => {
+  it('começa em "dark" quando não há preferência salva (padrão pedido pelo usuário)', () => {
     const { result } = renderHook(() => useTheme());
-    expect(result.current.preference).toBe('auto');
+    expect(result.current.preference).toBe('dark');
+  });
+
+  it('escolher "auto" explicitamente sobrevive a um remount, em vez de cair pro padrão de novo', () => {
+    const primeira = renderHook(() => useTheme());
+    act(() => primeira.result.current.setPreference('auto'));
+    expect(localStorage.getItem('cofre-pessoal-theme')).toBe('auto');
+
+    const segunda = renderHook(() => useTheme());
+    expect(segunda.result.current.preference).toBe('auto');
   });
 
   it('setPreference salva no localStorage e aplica no documentElement', () => {
@@ -36,14 +45,14 @@ describe('useTheme', () => {
     expect(result.current.preference).toBe('light');
   });
 
-  it('cai para "auto" sem quebrar quando localStorage.getItem lança (navegador bloqueando dados de site)', () => {
+  it('cai para "dark" sem quebrar quando localStorage.getItem lança (navegador bloqueando dados de site)', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('acesso a localStorage bloqueado');
     });
 
     const { result } = renderHook(() => useTheme());
 
-    expect(result.current.preference).toBe('auto');
+    expect(result.current.preference).toBe('dark');
   });
 
   it('setPreference não lança quando localStorage.setItem lança', () => {
