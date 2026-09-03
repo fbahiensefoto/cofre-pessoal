@@ -8,6 +8,11 @@ import { CURRENT_VERSION, VaultHeader } from './vaultHeader';
 import { VaultKeyManager, type WrappedDek } from './vaultKeyManager';
 import { VaultStorage } from './vaultStorage';
 
+export interface VaultSession {
+  dek: Uint8Array;
+  header: VaultHeader;
+}
+
 export class VaultRepository {
   private readonly keyManager: VaultKeyManager;
   private readonly aead: AeadCipher;
@@ -76,6 +81,41 @@ export class VaultRepository {
     } finally {
       this.sodium.memzero(dek);
     }
+  }
+
+  async openSession(masterPassword: string): Promise<{ session: VaultSession; credentials: Credential[] }> {
+    if (!(await this.storage.exists())) {
+      throw new VaultNotFoundError();
+    }
+
+    const bytes = await this.storage.readBytes();
+    const file = VaultFile.fromBytes(bytes);
+
+    if (file.header.formatVersion !== CURRENT_VERSION) {
+      throw new VaultUnsupportedVersionError(file.header.formatVersion);
+    }
+
+    const dek = this.keyManager.unwrapDek(file.header, file.wrappedDek, masterPassword);
+    const credentials = this.decryptPayload(file.header, file, dek);
+
+    return { session: { dek, header: file.header }, credentials };
+  }
+
+  async saveCredentials(session: VaultSession, credentials: Credential[]): Promise<void> {
+    const bytes = await this.storage.readBytes();
+    const file = VaultFile.fromBytes(bytes);
+
+    const newFile = this.encryptPayload(
+      session.header,
+      file.wrappedDek,
+      session.dek,
+      credentials,
+    );
+    await this.storage.writeAtomic(newFile.toBytes());
+  }
+
+  closeSession(session: VaultSession): void {
+    this.sodium.memzero(session.dek);
   }
 
   private encryptPayload(header: VaultHeader, wrapped: WrappedDek, dek: Uint8Array, credentials: Credential[]): VaultFile {
