@@ -66,4 +66,36 @@ describe('VaultKeyManager', () => {
     const dekReaberta = keyManager.unwrapDek(header2, wrapped2, 'senha-nova-ficticia');
     expect(dekReaberta).toEqual(dek);
   });
+
+  it('adulterar o formatVersion do cabeçalho invalida a chave embrulhada (testa AAD especificamente)', () => {
+    const dek = keyManager.generateDek();
+    const { header, wrapped } = keyManager.wrapNewDek(dek, 'senha-correta-ficticia', params);
+
+    const headerAdulterado = new VaultHeader(
+      header.formatVersion + 1,
+      header.kdfMemLimit,
+      header.kdfOpsLimit,
+      header.salt,
+    );
+
+    expect(() => keyManager.unwrapDek(headerAdulterado, wrapped, 'senha-correta-ficticia')).toThrow(
+      VaultAuthenticationFailedError,
+    );
+  });
+
+  it('unwrapDek com kdfOpsLimit fora do intervalo válido lança VaultAuthenticationFailedError', () => {
+    const dek = keyManager.generateDek();
+    const { header, wrapped } = keyManager.wrapNewDek(dek, 'senha-correta-ficticia', params);
+
+    const headerComOpsLimitInvalido = new VaultHeader(
+      header.formatVersion,
+      header.kdfMemLimit,
+      0,
+      header.salt,
+    );
+
+    expect(() => keyManager.unwrapDek(headerComOpsLimitInvalido, wrapped, 'senha-correta-ficticia')).toThrow(
+      VaultAuthenticationFailedError,
+    );
+  });
 });

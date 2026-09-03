@@ -42,13 +42,16 @@ export class VaultKeyManager {
 
   unwrapDek(header: VaultHeader, wrapped: WrappedDek, masterPassword: string): Uint8Array {
     const params: Argon2Params = { opsLimit: header.kdfOpsLimit, memLimit: header.kdfMemLimit };
-    const kek = this.keyDerivation.deriveKey(masterPassword, header.salt, params, this.aead.keyBytes);
+    let kek: Uint8Array | undefined;
     try {
+      kek = this.keyDerivation.deriveKey(masterPassword, header.salt, params, this.aead.keyBytes);
       return this.aead.decrypt(wrapped.ciphertext, wrapped.nonce, kek, header.toBytes());
     } catch {
       throw new VaultAuthenticationFailedError();
     } finally {
-      this.sodium.memzero(kek);
+      if (kek !== undefined) {
+        this.sodium.memzero(kek);
+      }
     }
   }
 
