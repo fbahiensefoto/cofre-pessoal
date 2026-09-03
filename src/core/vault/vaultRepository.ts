@@ -25,6 +25,10 @@ export class VaultRepository {
     this.aead = new AeadCipher(sodium);
   }
 
+  get sodiumInstance(): Sodium {
+    return this.sodium;
+  }
+
   /**
    * [initialCredentials] existe só para permitir testar nesta fase que
    * credenciais não aparecem em texto puro no IndexedDB. CRUD completo
