@@ -29,13 +29,12 @@ describe('App', () => {
     fireEvent.input(screen.getByLabelText(/confirme a senha mestra/i), { target: { value: 'frase-senha-app-ficticia' } });
     fireEvent.click(screen.getByRole('button', { name: /criar cofre/i }));
 
-    // Cofre vazio: cai na tela de Pessoas, sem ninguém cadastrado ainda.
-    await waitFor(() => expect(screen.getByRole('button', { name: /nova pessoa/i })).toBeTruthy());
+    // Cofre vazio: cai na tela de Pessoas, sem ninguém cadastrado ainda. Cadastrar
+    // uma pessoa nova é só mais um campo na própria tela, não uma tela separada.
+    await waitFor(() => expect(screen.getByLabelText(/pesquisar pessoa/i)).toBeTruthy());
     expect(screen.getByText(/nenhuma pessoa encontrada/i)).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: /nova pessoa/i }));
-    await waitFor(() => expect(screen.getByLabelText(/^nome/i)).toBeTruthy());
-    fireEvent.input(screen.getByLabelText(/^nome/i), { target: { value: 'Fábio Bahiense' } });
+    fireEvent.input(screen.getByLabelText(/nova pessoa/i), { target: { value: 'Fábio Bahiense' } });
     fireEvent.click(screen.getByRole('button', { name: /cadastrar/i }));
 
     // Cadastrar a pessoa leva direto para a página dela, ainda sem credenciais.
@@ -90,7 +89,7 @@ describe('App', () => {
     await waitFor(() => expect(openSessionSpy).toHaveBeenCalledTimes(1));
     const { session }: { session: VaultSession } = await openSessionSpy.mock.results[0]!.value;
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /nova pessoa/i })).toBeTruthy());
+    await waitFor(() => expect(screen.getByLabelText(/pesquisar pessoa/i)).toBeTruthy());
     expect(session.dek.every((b) => b === 0)).toBe(false);
     expect(session.closed).toBe(false);
 

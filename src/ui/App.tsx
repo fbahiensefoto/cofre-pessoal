@@ -8,7 +8,6 @@ import { VaultSessionProvider } from './state/VaultSessionContext';
 import { WelcomeScreen } from './screens/WelcomeScreen';
 import { UnlockScreen } from './screens/UnlockScreen';
 import { PeopleScreen } from './screens/PeopleScreen';
-import { NewPersonScreen } from './screens/NewPersonScreen';
 import { PersonCredentialsScreen } from './screens/PersonCredentialsScreen';
 import { CredentialDetailScreen } from './screens/CredentialDetailScreen';
 import { CredentialFormScreen } from './screens/CredentialFormScreen';
@@ -22,7 +21,6 @@ type GateState =
 
 type MainView =
   | { view: 'people' }
-  | { view: 'new-person' }
   | { view: 'person'; owner: string }
   | { view: 'detail'; id: string; owner: string }
   | { view: 'form'; id?: string; owner: string }
@@ -82,14 +80,7 @@ export function App() {
       {mainView.view === 'people' && (
         <PeopleScreen
           onSelectPerson={(owner) => setMainView({ view: 'person', owner })}
-          onAddPerson={() => setMainView({ view: 'new-person' })}
           onOpenSettings={() => setMainView({ view: 'settings' })}
-        />
-      )}
-      {mainView.view === 'new-person' && (
-        <NewPersonScreen
-          onCreated={(owner) => setMainView({ view: 'person', owner })}
-          onCancel={() => setMainView({ view: 'people' })}
         />
       )}
       {mainView.view === 'person' && (

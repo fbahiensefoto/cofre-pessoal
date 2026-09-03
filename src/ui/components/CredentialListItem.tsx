@@ -10,7 +10,7 @@ export function CredentialListItem(props: {
   const { credential } = props;
 
   return (
-    <li style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', borderBottom: '1px solid var(--color-border)' }}>
+    <li style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', borderBottom: '1px solid var(--color-accent)' }}>
       <button
         type="button"
         aria-label={credential.favorite ? 'Remover dos favoritos' : 'Marcar como favorito'}

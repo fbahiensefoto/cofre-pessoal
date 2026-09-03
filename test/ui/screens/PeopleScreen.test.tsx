@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/preact';
+import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
 import type { Credential } from '../../../src/core/model/credential';
 import type { Person } from '../../../src/core/model/person';
 import type { VaultSessionContextValue } from '../../../src/ui/state/VaultSessionContext';
@@ -49,7 +49,7 @@ function mockSession(overrides: Partial<VaultSessionContextValue> = {}): VaultSe
 describe('PeopleScreen', () => {
   it('lista todas as pessoas cadastradas, mesmo as sem nenhuma credencial ainda', () => {
     vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession());
-    render(<PeopleScreen onSelectPerson={() => {}} onAddPerson={() => {}} onOpenSettings={() => {}} />);
+    render(<PeopleScreen onSelectPerson={() => {}} onOpenSettings={() => {}} />);
 
     expect(screen.getByText('Fábio Bahiense')).toBeTruthy();
     expect(screen.getByText('Cíntia de Souza')).toBeTruthy();
@@ -58,7 +58,7 @@ describe('PeopleScreen', () => {
 
   it('mostra a contagem de credenciais de cada pessoa', () => {
     vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession());
-    render(<PeopleScreen onSelectPerson={() => {}} onAddPerson={() => {}} onOpenSettings={() => {}} />);
+    render(<PeopleScreen onSelectPerson={() => {}} onOpenSettings={() => {}} />);
 
     expect(screen.getByText('1 credencial')).toBeTruthy();
     expect(screen.getAllByText('0 credenciais')).toHaveLength(2);
@@ -66,7 +66,7 @@ describe('PeopleScreen', () => {
 
   it('filtra pela busca', () => {
     vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession());
-    render(<PeopleScreen onSelectPerson={() => {}} onAddPerson={() => {}} onOpenSettings={() => {}} />);
+    render(<PeopleScreen onSelectPerson={() => {}} onOpenSettings={() => {}} />);
 
     fireEvent.input(screen.getByLabelText(/pesquisar pessoa/i), { target: { value: 'Cíntia' } });
 
@@ -77,25 +77,16 @@ describe('PeopleScreen', () => {
   it('chama onSelectPerson com o nome ao clicar numa pessoa', () => {
     const onSelectPerson = vi.fn();
     vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession());
-    render(<PeopleScreen onSelectPerson={onSelectPerson} onAddPerson={() => {}} onOpenSettings={() => {}} />);
+    render(<PeopleScreen onSelectPerson={onSelectPerson} onOpenSettings={() => {}} />);
 
     fireEvent.click(screen.getByText('Cíntia de Souza'));
     expect(onSelectPerson).toHaveBeenCalledWith('Cíntia de Souza');
   });
 
-  it('chama onAddPerson ao clicar em "+ Nova pessoa"', () => {
-    const onAddPerson = vi.fn();
-    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession());
-    render(<PeopleScreen onSelectPerson={() => {}} onAddPerson={onAddPerson} onOpenSettings={() => {}} />);
-
-    fireEvent.click(screen.getByRole('button', { name: /nova pessoa/i }));
-    expect(onAddPerson).toHaveBeenCalled();
-  });
-
   it('chama onOpenSettings ao clicar em configurações', () => {
     const onOpenSettings = vi.fn();
     vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession());
-    render(<PeopleScreen onSelectPerson={() => {}} onAddPerson={() => {}} onOpenSettings={onOpenSettings} />);
+    render(<PeopleScreen onSelectPerson={() => {}} onOpenSettings={onOpenSettings} />);
 
     fireEvent.click(screen.getByLabelText(/configurações/i));
     expect(onOpenSettings).toHaveBeenCalled();
@@ -103,8 +94,52 @@ describe('PeopleScreen', () => {
 
   it('mostra mensagem de lista vazia quando não há nenhuma pessoa cadastrada', () => {
     vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ people: [], credentials: [] }));
-    render(<PeopleScreen onSelectPerson={() => {}} onAddPerson={() => {}} onOpenSettings={() => {}} />);
+    render(<PeopleScreen onSelectPerson={() => {}} onOpenSettings={() => {}} />);
 
     expect(screen.getByText(/nenhuma pessoa encontrada/i)).toBeTruthy();
+  });
+
+  it('cadastra a pessoa direto nesta tela e chama onSelectPerson com o nome, ao salvar', async () => {
+    const addPerson = vi.fn().mockImplementation(async (name: string) => ({
+      id: 'id-nova-pessoa',
+      name,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    }));
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ addPerson }));
+    const onSelectPerson = vi.fn();
+
+    render(<PeopleScreen onSelectPerson={onSelectPerson} onOpenSettings={() => {}} />);
+
+    fireEvent.input(screen.getByLabelText(/nova pessoa/i), { target: { value: 'Maria Fictícia' } });
+    fireEvent.click(screen.getByRole('button', { name: /cadastrar/i }));
+
+    await waitFor(() => expect(addPerson).toHaveBeenCalledWith('Maria Fictícia'));
+    expect(onSelectPerson).toHaveBeenCalledWith('Maria Fictícia');
+  });
+
+  it('não deixa cadastrar com o nome em branco', async () => {
+    const addPerson = vi.fn();
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ addPerson }));
+
+    render(<PeopleScreen onSelectPerson={() => {}} onOpenSettings={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /cadastrar/i }));
+
+    expect(screen.getByRole('alert').textContent).toMatch(/digite o nome/i);
+    expect(addPerson).not.toHaveBeenCalled();
+  });
+
+  it('recusa um nome que já está cadastrado, sem chamar addPerson', async () => {
+    const addPerson = vi.fn();
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ addPerson }));
+
+    render(<PeopleScreen onSelectPerson={() => {}} onOpenSettings={() => {}} />);
+
+    fireEvent.input(screen.getByLabelText(/nova pessoa/i), { target: { value: 'Cíntia de Souza' } });
+    fireEvent.click(screen.getByRole('button', { name: /cadastrar/i }));
+
+    expect(screen.getByRole('alert').textContent).toMatch(/já está cadastrada/i);
+    expect(addPerson).not.toHaveBeenCalled();
   });
 });

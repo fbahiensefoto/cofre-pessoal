@@ -1,13 +1,23 @@
+/*
+ * Paleta: preto/branco + duas tonalidades de cinza, de propósito — pedido
+ * explícito do usuário ("preto, branco, duas tonalidades de cinza
+ * diferentes"). --color-danger é a única exceção: cor de ação destrutiva é
+ * convenção de segurança/acessibilidade, não escolha decorativa.
+ *   --color-bg      preto (ou branco no tema claro) — página.
+ *   --color-surface cinza 1 (mais escuro no escuro) — preenchimento de
+ *                   caixas: input, select, textarea, button, diálogo.
+ *   --color-accent  cinza 2 (mais claro no escuro) — bordas dessas caixas,
+ *                   texto secundário, preenchimento de badge (com texto
+ *                   invertido em --color-bg) e a barra de força de senha.
+ *   --color-text    branco (ou preto no tema claro) — todo o texto.
+ */
 :root {
   color-scheme: light;
   --color-bg: #ffffff;
   --color-text: #17181a;
-  --color-primary: #17181a;
-  --color-border: #c3c6cc;
   --color-danger: #b3261e;
   --color-surface: #eef0f2;
-  --color-surface-2: #dde0e4;
-  --color-text-muted: #5b5e66;
+  --color-accent: #5b5e66;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -15,12 +25,9 @@
     color-scheme: dark;
     --color-bg: #0d0d0f;
     --color-text: #f2f2f4;
-    --color-primary: #c9cbd1;
-    --color-border: #55585f;
     --color-danger: #ff6b6b;
     --color-surface: #2a2c30;
-    --color-surface-2: #45484f;
-    --color-text-muted: #a3a6ad;
+    --color-accent: #a3a6ad;
   }
 }
 
@@ -28,12 +35,9 @@
   color-scheme: dark;
   --color-bg: #0d0d0f;
   --color-text: #f2f2f4;
-  --color-primary: #c9cbd1;
-  --color-border: #55585f;
   --color-danger: #ff6b6b;
   --color-surface: #2a2c30;
-  --color-surface-2: #45484f;
-  --color-text-muted: #a3a6ad;
+  --color-accent: #a3a6ad;
 }
 
 * {
@@ -45,7 +49,7 @@ body {
   color: var(--color-text);
   font-family: system-ui, -apple-system, sans-serif;
   margin: 0;
-  accent-color: var(--color-primary);
+  accent-color: var(--color-accent);
 }
 
 button,
@@ -63,7 +67,7 @@ button {
   -webkit-appearance: none;
   background: var(--color-surface);
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-accent);
 }
 
 input:not([type='checkbox']):not([type='radio']),
@@ -73,7 +77,7 @@ textarea {
   padding: 8px;
   background: var(--color-surface);
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-accent);
   appearance: none;
   -webkit-appearance: none;
 }

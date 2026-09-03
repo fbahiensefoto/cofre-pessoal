@@ -23,9 +23,15 @@ export function PasswordStrengthMeter(props: { password: string }) {
         aria-valuenow={NIVEIS.indexOf(nivel) + 1}
         aria-valuemin={1}
         aria-valuemax={4}
-        style={{ background: 'var(--color-border)', borderRadius: '4px', height: '8px', overflow: 'hidden' }}
+        style={{
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-accent)',
+          borderRadius: '4px',
+          height: '8px',
+          overflow: 'hidden',
+        }}
       >
-        <div style={{ width: largura, height: '100%', background: 'var(--color-primary)' }} />
+        <div style={{ width: largura, height: '100%', background: 'var(--color-accent)' }} />
       </div>
       <span>Força: {nivel}</span>
     </div>

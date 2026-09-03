@@ -5,8 +5,9 @@ export function CategoryBadge(props: { category: string }) {
         display: 'inline-block',
         padding: '2px 8px',
         borderRadius: '12px',
-        background: 'var(--color-surface-2)',
-        border: '1px solid var(--color-border)',
+        background: 'var(--color-accent)',
+        color: 'var(--color-bg)',
+        border: '1px solid var(--color-surface)',
         fontSize: '0.85em',
       }}
     >
