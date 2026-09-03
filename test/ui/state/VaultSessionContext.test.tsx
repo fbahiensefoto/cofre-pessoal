@@ -10,10 +10,12 @@ import { VaultStorage } from '../../../src/core/vault/vaultStorage';
 import { VaultSessionProvider, useVaultSession } from '../../../src/ui/state/VaultSessionContext';
 
 function TestConsumer() {
-  const { credentials, addCredential, updateCredential, deleteCredential, toggleFavorite, lock } = useVaultSession();
+  const { people, credentials, addPerson, addCredential, updateCredential, deleteCredential, toggleFavorite, lock } = useVaultSession();
   return (
     <div>
       <span data-testid="count">{credentials.length}</span>
+      <span data-testid="people-count">{people.length}</span>
+      <button onClick={() => addPerson('Pessoa Teste')}>adicionar pessoa</button>
       <button
         onClick={() =>
           addCredential({
@@ -84,7 +86,13 @@ describe('VaultSessionContext', () => {
     let bloqueado = false;
 
     render(
-      <VaultSessionProvider repository={repository} session={session} initialCredentials={credentials} onLock={() => (bloqueado = true)}>
+      <VaultSessionProvider
+        repository={repository}
+        session={session}
+        initialPeople={[]}
+        initialCredentials={credentials}
+        onLock={() => (bloqueado = true)}
+      >
         <TestConsumer />
       </VaultSessionProvider>,
     );
@@ -118,5 +126,32 @@ describe('VaultSessionContext', () => {
 
     fireEvent.click(screen.getByText('bloquear'));
     expect(bloqueado).toBe(true);
+  });
+
+  it('addPerson cadastra e persiste, e não duplica um nome já existente', async () => {
+    await repository.createVault('senha-ficticia', params);
+    const { session, people, credentials } = await repository.openSession('senha-ficticia');
+
+    render(
+      <VaultSessionProvider repository={repository} session={session} initialPeople={people} initialCredentials={credentials} onLock={() => {}}>
+        <TestConsumer />
+      </VaultSessionProvider>,
+    );
+
+    expect(screen.getByTestId('people-count').textContent).toBe('0');
+
+    fireEvent.click(screen.getByText('adicionar pessoa'));
+    await waitFor(() => expect(screen.getByTestId('people-count').textContent).toBe('1'));
+
+    // Confirma persistência real: abre uma sessão nova e vê a pessoa.
+    const { session: sessao2, people: pessoas2 } = await repository.openSession('senha-ficticia');
+    expect(pessoas2).toHaveLength(1);
+    expect(pessoas2[0]?.name).toBe('Pessoa Teste');
+    repository.closeSession(sessao2);
+
+    // Cadastrar o mesmo nome de novo não deve criar uma segunda pessoa.
+    fireEvent.click(screen.getByText('adicionar pessoa'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.getByTestId('people-count').textContent).toBe('1');
   });
 });

@@ -2,13 +2,14 @@ import { useState } from 'preact/hooks';
 import type { Sodium } from '../../core/crypto/sodiumProvider';
 import { interactiveParams } from '../../core/crypto/keyDerivation';
 import type { Credential } from '../../core/model/credential';
+import type { Person } from '../../core/model/person';
 import type { VaultRepository, VaultSession } from '../../core/vault/vaultRepository';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
 
 export function WelcomeScreen(props: {
   repository: VaultRepository;
   sodium: Sodium;
-  onCreated: (result: { session: VaultSession; credentials: Credential[] }) => void;
+  onCreated: (result: { session: VaultSession; people: Person[]; credentials: Credential[] }) => void;
 }) {
   const [senha, setSenha] = useState('');
   const [confirmacao, setConfirmacao] = useState('');

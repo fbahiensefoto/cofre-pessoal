@@ -2,9 +2,17 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
 import type { Credential } from '../../../src/core/model/credential';
+import type { Person } from '../../../src/core/model/person';
 import type { VaultSessionContextValue } from '../../../src/ui/state/VaultSessionContext';
 import * as VaultSessionContext from '../../../src/ui/state/VaultSessionContext';
 import { CredentialFormScreen } from '../../../src/ui/screens/CredentialFormScreen';
+
+function samplePeople(): Person[] {
+  return [
+    { id: 'id-pessoa-cintia', name: 'Cíntia de Souza', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+    { id: 'id-pessoa-fabio', name: 'Fábio Bahiense', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+  ];
+}
 
 function sampleCredential(): Credential {
   return {
@@ -22,7 +30,9 @@ function sampleCredential(): Credential {
 
 function mockSession(overrides: Partial<VaultSessionContextValue> = {}): VaultSessionContextValue {
   return {
+    people: samplePeople(),
     credentials: [sampleCredential()],
+    addPerson: vi.fn(),
     addCredential: vi.fn(),
     updateCredential: vi.fn(),
     deleteCredential: vi.fn(),
@@ -33,15 +43,15 @@ function mockSession(overrides: Partial<VaultSessionContextValue> = {}): VaultSe
 }
 
 describe('CredentialFormScreen', () => {
-  it('modo criação: chama addCredential e onDone ao salvar', async () => {
+  it('modo criação: a pessoa vem pré-selecionada pelo initialOwner, e é enviada ao salvar', async () => {
     const addCredential = vi.fn().mockResolvedValue(undefined);
     vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ addCredential }));
     const onDone = vi.fn();
 
-    render(<CredentialFormScreen onDone={onDone} onCancel={() => {}} />);
+    render(<CredentialFormScreen initialOwner="Fábio Bahiense" onDone={onDone} onCancel={() => {}} />);
 
-    fireEvent.change(screen.getByLabelText(/^pessoa/i), { target: { value: '__nova__' } });
-    fireEvent.input(screen.getByLabelText(/nome da nova pessoa/i), { target: { value: 'Fábio Bahiense' } });
+    expect((screen.getByLabelText(/^pessoa/i) as HTMLSelectElement).value).toBe('Fábio Bahiense');
+
     fireEvent.input(screen.getByLabelText(/nome do serviço/i), { target: { value: 'Novo Serviço' } });
     fireEvent.change(screen.getByLabelText(/categoria/i), { target: { value: 'Trabalho' } });
     fireEvent.input(screen.getByLabelText(/^senha/i), { target: { value: 'nova-senha-ficticia' } });
@@ -57,12 +67,29 @@ describe('CredentialFormScreen', () => {
     expect(onDone).toHaveBeenCalled();
   });
 
-  it('modo edição: preenche os campos e chama updateCredential ao salvar', async () => {
+  it('modo criação: dá para trocar a pessoa pré-selecionada por outra já cadastrada', async () => {
+    const addCredential = vi.fn().mockResolvedValue(undefined);
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ addCredential }));
+    const onDone = vi.fn();
+
+    render(<CredentialFormScreen initialOwner="Fábio Bahiense" onDone={onDone} onCancel={() => {}} />);
+
+    fireEvent.change(screen.getByLabelText(/^pessoa/i), { target: { value: 'Cíntia de Souza' } });
+    fireEvent.input(screen.getByLabelText(/nome do serviço/i), { target: { value: 'Novo Serviço' } });
+    fireEvent.change(screen.getByLabelText(/categoria/i), { target: { value: 'Trabalho' } });
+    fireEvent.input(screen.getByLabelText(/^senha/i), { target: { value: 'nova-senha-ficticia' } });
+    fireEvent.click(screen.getByRole('button', { name: /salvar/i }));
+
+    await waitFor(() => expect(addCredential).toHaveBeenCalled());
+    expect(addCredential.mock.calls[0]![0]).toMatchObject({ owner: 'Cíntia de Souza' });
+  });
+
+  it('modo edição: preenche os campos (pessoa incluída) e chama updateCredential ao salvar', async () => {
     const updateCredential = vi.fn().mockResolvedValue(undefined);
     vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ updateCredential }));
     const onDone = vi.fn();
 
-    render(<CredentialFormScreen credentialId="id-form" onDone={onDone} onCancel={() => {}} />);
+    render(<CredentialFormScreen credentialId="id-form" initialOwner="Cíntia de Souza" onDone={onDone} onCancel={() => {}} />);
 
     expect((screen.getByLabelText(/^pessoa/i) as HTMLSelectElement).value).toBe('Cíntia de Souza');
     expect((screen.getByLabelText(/nome do serviço/i) as HTMLInputElement).value).toBe('Serviço Form');
@@ -76,28 +103,10 @@ describe('CredentialFormScreen', () => {
     await waitFor(() =>
       expect(updateCredential).toHaveBeenCalledWith(
         'id-form',
-        expect.objectContaining({ serviceName: 'Serviço Form Editado', category: 'site' }),
+        expect.objectContaining({ owner: 'Cíntia de Souza', serviceName: 'Serviço Form Editado', category: 'site' }),
       ),
     );
     expect(onDone).toHaveBeenCalled();
-  });
-
-  it('modo criação: escolher uma pessoa já cadastrada no select (sem passar por "+ Nova pessoa")', async () => {
-    const addCredential = vi.fn().mockResolvedValue(undefined);
-    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ addCredential }));
-    const onDone = vi.fn();
-
-    render(<CredentialFormScreen onDone={onDone} onCancel={() => {}} />);
-
-    expect(screen.queryByLabelText(/nome da nova pessoa/i)).toBeNull();
-    fireEvent.change(screen.getByLabelText(/^pessoa/i), { target: { value: 'Cíntia de Souza' } });
-    fireEvent.input(screen.getByLabelText(/nome do serviço/i), { target: { value: 'Novo Serviço' } });
-    fireEvent.change(screen.getByLabelText(/categoria/i), { target: { value: 'Trabalho' } });
-    fireEvent.input(screen.getByLabelText(/^senha/i), { target: { value: 'nova-senha-ficticia' } });
-    fireEvent.click(screen.getByRole('button', { name: /salvar/i }));
-
-    await waitFor(() => expect(addCredential).toHaveBeenCalled());
-    expect(addCredential.mock.calls[0]![0]).toMatchObject({ owner: 'Cíntia de Souza' });
   });
 
   it('modo edição: exclusão pede confirmação antes de chamar deleteCredential', async () => {
@@ -105,7 +114,7 @@ describe('CredentialFormScreen', () => {
     vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ deleteCredential }));
     const onDone = vi.fn();
 
-    render(<CredentialFormScreen credentialId="id-form" onDone={onDone} onCancel={() => {}} />);
+    render(<CredentialFormScreen credentialId="id-form" initialOwner="Cíntia de Souza" onDone={onDone} onCancel={() => {}} />);
 
     fireEvent.click(screen.getByRole('button', { name: /excluir/i }));
     expect(deleteCredential).not.toHaveBeenCalled();
@@ -120,7 +129,7 @@ describe('CredentialFormScreen', () => {
     const deleteCredential = vi.fn();
     vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ deleteCredential }));
 
-    render(<CredentialFormScreen credentialId="id-form" onDone={() => {}} onCancel={() => {}} />);
+    render(<CredentialFormScreen credentialId="id-form" initialOwner="Cíntia de Souza" onDone={() => {}} onCancel={() => {}} />);
 
     fireEvent.click(screen.getByRole('button', { name: /excluir/i }));
     fireEvent.click(screen.getByRole('button', { name: /cancelar/i }));

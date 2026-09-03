@@ -1,10 +1,11 @@
 import { useState } from 'preact/hooks';
 import type { Credential } from '../../core/model/credential';
+import type { Person } from '../../core/model/person';
 import type { VaultRepository, VaultSession } from '../../core/vault/vaultRepository';
 
 export function UnlockScreen(props: {
   repository: VaultRepository;
-  onUnlocked: (result: { session: VaultSession; credentials: Credential[] }) => void;
+  onUnlocked: (result: { session: VaultSession; people: Person[]; credentials: Credential[] }) => void;
 }) {
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState<string | null>(null);

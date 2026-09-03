@@ -13,7 +13,9 @@ import { SettingsScreen } from '../../../src/ui/screens/SettingsScreen';
 
 function mockVaultSession(overrides: Partial<VaultSessionContextValue> = {}): VaultSessionContextValue {
   return {
+    people: [],
     credentials: [],
+    addPerson: vi.fn(),
     addCredential: vi.fn(),
     updateCredential: vi.fn(),
     deleteCredential: vi.fn(),

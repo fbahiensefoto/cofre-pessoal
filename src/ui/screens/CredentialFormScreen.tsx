@@ -8,9 +8,9 @@ type FormData = Omit<Credential, 'id' | 'createdAt' | 'updatedAt'>;
 
 const CATEGORIAS = ['Pessoal', 'Trabalho', 'Financeiro', 'Compras', 'Redes Sociais', 'E-mail', 'Terceiros', 'Outros'];
 
-function emptyForm(): FormData {
+function emptyForm(owner: string): FormData {
   return {
-    owner: '',
+    owner,
     serviceName: '',
     category: '',
     url: '',
@@ -22,23 +22,18 @@ function emptyForm(): FormData {
   };
 }
 
-export function CredentialFormScreen(props: { credentialId?: string; onDone: () => void; onCancel: () => void }) {
-  const { credentials, addCredential, updateCredential, deleteCredential } = useVaultSession();
+export function CredentialFormScreen(props: { credentialId?: string; initialOwner: string; onDone: () => void; onCancel: () => void }) {
+  const { people, credentials, addCredential, updateCredential, deleteCredential } = useVaultSession();
   const existente = props.credentialId ? credentials.find((c) => c.id === props.credentialId) : undefined;
   // Credenciais criadas antes da categoria virar uma lista fixa podem ter um valor fora
   // dela — preservamos como opção extra em vez de trocar silenciosamente ao editar.
   const categoriaForaDaLista = existente && !CATEGORIAS.includes(existente.category) ? existente.category : null;
-  // "Pessoa" não é uma lista fixa como Categoria — cresce com o uso, é específica de
-  // cada usuário. A lista de opções vem das próprias credenciais já cadastradas.
-  const pessoasExistentes = [...new Set(credentials.map((c) => c.owner).filter((nome): nome is string => Boolean(nome)))].sort(
-    (a, b) => a.localeCompare(b, 'pt-BR'),
-  );
+  const pessoasOrdenadas = [...people].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
-  const ownerInicial = existente?.owner ?? '';
   const [form, setForm] = useState<FormData>(
     existente
       ? {
-          owner: ownerInicial,
+          owner: existente.owner,
           serviceName: existente.serviceName,
           category: existente.category,
           url: existente.url ?? '',
@@ -48,12 +43,8 @@ export function CredentialFormScreen(props: { credentialId?: string; onDone: () 
           tags: existente.tags,
           favorite: existente.favorite,
         }
-      : emptyForm(),
+      : emptyForm(props.initialOwner),
   );
-  // Só começa no modo "nova pessoa" (campo de texto) quando já existe um valor
-  // definido que não está entre as pessoas conhecidas — nunca por padrão numa
-  // credencial nova ou numa antiga sem pessoa: nesses casos mostramos o select.
-  const [novaPessoa, setNovaPessoa] = useState(ownerInicial !== '' && !pessoasExistentes.includes(ownerInicial));
   const [tagsTexto, setTagsTexto] = useState(existente ? existente.tags.join(', ') : '');
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -104,45 +95,16 @@ export function CredentialFormScreen(props: { credentialId?: string; onDone: () 
       <h1>{props.credentialId ? 'Editar credencial' : 'Nova credencial'}</h1>
       <form onSubmit={handleSubmit}>
         <label htmlFor="pessoa">Pessoa</label>
-        {pessoasExistentes.length > 0 ? (
-          <select
-            id="pessoa"
-            required
-            value={novaPessoa ? '__nova__' : form.owner}
-            onChange={(e) => {
-              const valor = (e.target as HTMLSelectElement).value;
-              if (valor === '__nova__') {
-                setNovaPessoa(true);
-                updateField('owner', '');
-              } else {
-                setNovaPessoa(false);
-                updateField('owner', valor);
-              }
-            }}
-          >
-            <option value="" disabled>
-              Selecione uma pessoa
+        <select id="pessoa" required value={form.owner} onChange={(e) => updateField('owner', (e.target as HTMLSelectElement).value)}>
+          <option value="" disabled>
+            Selecione uma pessoa
+          </option>
+          {pessoasOrdenadas.map((pessoa) => (
+            <option key={pessoa.id} value={pessoa.name}>
+              {pessoa.name}
             </option>
-            {pessoasExistentes.map((nome) => (
-              <option key={nome} value={nome}>
-                {nome}
-              </option>
-            ))}
-            <option value="__nova__">+ Nova pessoa</option>
-          </select>
-        ) : (
-          <input id="pessoa" required value={form.owner} onInput={(e) => updateField('owner', (e.target as HTMLInputElement).value)} />
-        )}
-        {pessoasExistentes.length > 0 && novaPessoa && (
-          <input
-            id="pessoa-nova"
-            aria-label="Nome da nova pessoa"
-            required
-            placeholder="Nome da pessoa"
-            value={form.owner}
-            onInput={(e) => updateField('owner', (e.target as HTMLInputElement).value)}
-          />
-        )}
+          ))}
+        </select>
 
         <label htmlFor="nome-servico">Nome do serviço</label>
         <input

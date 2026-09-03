@@ -2,6 +2,7 @@ import type { Sodium } from '../crypto/sodiumProvider';
 import { AeadCipher } from '../crypto/aeadCipher';
 import type { Argon2Params } from '../crypto/keyDerivation';
 import type { Credential } from '../model/credential';
+import type { Person } from '../model/person';
 import { VaultAuthenticationFailedError, VaultNotFoundError, VaultUnsupportedVersionError } from './vaultExceptions';
 import { VaultFile } from './vaultFormat';
 import { CURRENT_VERSION, VaultHeader } from './vaultHeader';
@@ -11,6 +12,12 @@ import { VaultStorage } from './vaultStorage';
 export interface VaultSession {
   dek: Uint8Array;
   closed: boolean;
+}
+
+/** Formato do payload cifrado: pessoas e credenciais viajam juntas no mesmo blob. */
+export interface VaultData {
+  people: Person[];
+  credentials: Credential[];
 }
 
 export class VaultRepository {
@@ -38,7 +45,7 @@ export class VaultRepository {
     const dek = this.keyManager.generateDek();
     try {
       const { header, wrapped } = this.keyManager.wrapNewDek(dek, masterPassword, params);
-      const file = this.encryptPayload(header, wrapped, dek, initialCredentials);
+      const file = this.encryptPayload(header, wrapped, dek, { people: [], credentials: initialCredentials });
       await this.storage.writeAtomic(file.toBytes());
     } finally {
       this.sodium.memzero(dek);
@@ -59,7 +66,7 @@ export class VaultRepository {
 
     const dek = this.keyManager.unwrapDek(file.header, file.wrappedDek, masterPassword);
     try {
-      return this.decryptPayload(file.header, file, dek);
+      return this.decryptPayload(file.header, file, dek).credentials;
     } finally {
       this.sodium.memzero(dek);
     }
@@ -87,7 +94,7 @@ export class VaultRepository {
     }
   }
 
-  async openSession(masterPassword: string): Promise<{ session: VaultSession; credentials: Credential[] }> {
+  async openSession(masterPassword: string): Promise<{ session: VaultSession; people: Person[]; credentials: Credential[] }> {
     if (!(await this.storage.exists())) {
       throw new VaultNotFoundError();
     }
@@ -100,12 +107,12 @@ export class VaultRepository {
     }
 
     const dek = this.keyManager.unwrapDek(file.header, file.wrappedDek, masterPassword);
-    const credentials = this.decryptPayload(file.header, file, dek);
+    const { people, credentials } = this.decryptPayload(file.header, file, dek);
 
-    return { session: { dek, closed: false }, credentials };
+    return { session: { dek, closed: false }, people, credentials };
   }
 
-  async saveCredentials(session: VaultSession, credentials: Credential[]): Promise<void> {
+  async saveVaultData(session: VaultSession, data: VaultData): Promise<void> {
     if (session.closed) {
       throw new Error('Sessão já foi bloqueada.');
     }
@@ -122,12 +129,7 @@ export class VaultRepository {
     // permanentemente inabrível, mesmo com a senha nova correta. session.dek
     // continua válido para reuso: changeMasterPassword reembrulha a mesma DEK,
     // nunca gera uma nova.
-    const newFile = this.encryptPayload(
-      file.header,
-      file.wrappedDek,
-      session.dek,
-      credentials,
-    );
+    const newFile = this.encryptPayload(file.header, file.wrappedDek, session.dek, data);
     await this.storage.writeAtomic(newFile.toBytes());
   }
 
@@ -136,17 +138,17 @@ export class VaultRepository {
     session.closed = true;
   }
 
-  private encryptPayload(header: VaultHeader, wrapped: WrappedDek, dek: Uint8Array, credentials: Credential[]): VaultFile {
-    const payload = new TextEncoder().encode(JSON.stringify(credentials));
+  private encryptPayload(header: VaultHeader, wrapped: WrappedDek, dek: Uint8Array, data: VaultData): VaultFile {
+    const payload = new TextEncoder().encode(JSON.stringify(data));
     const nonce = this.aead.generateNonce();
     const ciphertext = this.aead.encrypt(payload, nonce, dek, header.dataAad);
     return new VaultFile(header, wrapped, nonce, ciphertext);
   }
 
-  private decryptPayload(header: VaultHeader, file: VaultFile, dek: Uint8Array): Credential[] {
+  private decryptPayload(header: VaultHeader, file: VaultFile, dek: Uint8Array): VaultData {
     try {
       const plain = this.aead.decrypt(file.dataCiphertext, file.dataNonce, dek, header.dataAad);
-      return JSON.parse(new TextDecoder().decode(plain)) as Credential[];
+      return JSON.parse(new TextDecoder().decode(plain)) as VaultData;
     } catch {
       throw new VaultAuthenticationFailedError();
     }

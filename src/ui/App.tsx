@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'preact/hooks';
 import { initSodium, type Sodium } from '../core/crypto/sodiumProvider';
 import type { Credential } from '../core/model/credential';
+import type { Person } from '../core/model/person';
 import { VaultRepository, type VaultSession } from '../core/vault/vaultRepository';
 import { VaultStorage } from '../core/vault/vaultStorage';
 import { VaultSessionProvider } from './state/VaultSessionContext';
 import { WelcomeScreen } from './screens/WelcomeScreen';
 import { UnlockScreen } from './screens/UnlockScreen';
-import { VaultListScreen } from './screens/VaultListScreen';
+import { PeopleScreen } from './screens/PeopleScreen';
+import { NewPersonScreen } from './screens/NewPersonScreen';
+import { PersonCredentialsScreen } from './screens/PersonCredentialsScreen';
 import { CredentialDetailScreen } from './screens/CredentialDetailScreen';
 import { CredentialFormScreen } from './screens/CredentialFormScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -15,15 +18,21 @@ type GateState =
   | { kind: 'loading' }
   | { kind: 'welcome' }
   | { kind: 'unlock' }
-  | { kind: 'unlocked'; session: VaultSession; credentials: Credential[] };
+  | { kind: 'unlocked'; session: VaultSession; people: Person[]; credentials: Credential[] };
 
-type MainView = { view: 'list' } | { view: 'detail'; id: string } | { view: 'form'; id?: string } | { view: 'settings' };
+type MainView =
+  | { view: 'people' }
+  | { view: 'new-person' }
+  | { view: 'person'; owner: string }
+  | { view: 'detail'; id: string; owner: string }
+  | { view: 'form'; id?: string; owner: string }
+  | { view: 'settings' };
 
 export function App() {
   const [sodium, setSodium] = useState<Sodium | null>(null);
   const [repository, setRepository] = useState<VaultRepository | null>(null);
   const [gate, setGate] = useState<GateState>({ kind: 'loading' });
-  const [mainView, setMainView] = useState<MainView>({ view: 'list' });
+  const [mainView, setMainView] = useState<MainView>({ view: 'people' });
 
   useEffect(() => {
     let cancelado = false;
@@ -41,9 +50,9 @@ export function App() {
     };
   }, []);
 
-  function handleUnlockedOrCreated(result: { session: VaultSession; credentials: Credential[] }) {
-    setGate({ kind: 'unlocked', session: result.session, credentials: result.credentials });
-    setMainView({ view: 'list' });
+  function handleUnlockedOrCreated(result: { session: VaultSession; people: Person[]; credentials: Credential[] }) {
+    setGate({ kind: 'unlocked', session: result.session, people: result.people, credentials: result.credentials });
+    setMainView({ view: 'people' });
   }
 
   function handleLock() {
@@ -66,32 +75,48 @@ export function App() {
     <VaultSessionProvider
       repository={repository}
       session={gate.session}
+      initialPeople={gate.people}
       initialCredentials={gate.credentials}
       onLock={handleLock}
     >
-      {mainView.view === 'list' && (
-        <VaultListScreen
-          onSelectCredential={(id) => setMainView({ view: 'detail', id })}
-          onCreateNew={() => setMainView({ view: 'form' })}
+      {mainView.view === 'people' && (
+        <PeopleScreen
+          onSelectPerson={(owner) => setMainView({ view: 'person', owner })}
+          onAddPerson={() => setMainView({ view: 'new-person' })}
           onOpenSettings={() => setMainView({ view: 'settings' })}
+        />
+      )}
+      {mainView.view === 'new-person' && (
+        <NewPersonScreen
+          onCreated={(owner) => setMainView({ view: 'person', owner })}
+          onCancel={() => setMainView({ view: 'people' })}
+        />
+      )}
+      {mainView.view === 'person' && (
+        <PersonCredentialsScreen
+          owner={mainView.owner}
+          onBack={() => setMainView({ view: 'people' })}
+          onSelectCredential={(id) => setMainView({ view: 'detail', id, owner: mainView.owner })}
+          onCreateNew={() => setMainView({ view: 'form', owner: mainView.owner })}
         />
       )}
       {mainView.view === 'detail' && (
         <CredentialDetailScreen
           credentialId={mainView.id}
-          onBack={() => setMainView({ view: 'list' })}
-          onEdit={(id) => setMainView({ view: 'form', id })}
+          onBack={() => setMainView({ view: 'person', owner: mainView.owner })}
+          onEdit={(id) => setMainView({ view: 'form', id, owner: mainView.owner })}
         />
       )}
       {mainView.view === 'form' && (
         <CredentialFormScreen
           credentialId={mainView.id}
-          onDone={() => setMainView({ view: 'list' })}
-          onCancel={() => setMainView({ view: 'list' })}
+          initialOwner={mainView.owner}
+          onDone={() => setMainView({ view: 'person', owner: mainView.owner })}
+          onCancel={() => setMainView({ view: 'person', owner: mainView.owner })}
         />
       )}
       {mainView.view === 'settings' && (
-        <SettingsScreen repository={repository} onBack={() => setMainView({ view: 'list' })} />
+        <SettingsScreen repository={repository} onBack={() => setMainView({ view: 'people' })} />
       )}
     </VaultSessionProvider>
   );

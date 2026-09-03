@@ -21,7 +21,7 @@ describe('App', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /criar cofre/i })).toBeTruthy());
   });
 
-  it('fluxo completo: criar cofre → adicionar credencial → aparece na lista → bloquear → desbloquear → credencial continua lá', async () => {
+  it('fluxo completo: criar cofre → cadastrar pessoa → adicionar credencial → aparece na lista dela → bloquear → desbloquear → continua tudo lá', async () => {
     render(<App />);
 
     await waitFor(() => expect(screen.getByLabelText(/crie uma senha mestra/i)).toBeTruthy());
@@ -29,19 +29,35 @@ describe('App', () => {
     fireEvent.input(screen.getByLabelText(/confirme a senha mestra/i), { target: { value: 'frase-senha-app-ficticia' } });
     fireEvent.click(screen.getByRole('button', { name: /criar cofre/i }));
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /adicionar credencial/i })).toBeTruthy());
+    // Cofre vazio: cai na tela de Pessoas, sem ninguém cadastrado ainda.
+    await waitFor(() => expect(screen.getByRole('button', { name: /nova pessoa/i })).toBeTruthy());
+    expect(screen.getByText(/nenhuma pessoa encontrada/i)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: /nova pessoa/i }));
+    await waitFor(() => expect(screen.getByLabelText(/^nome/i)).toBeTruthy());
+    fireEvent.input(screen.getByLabelText(/^nome/i), { target: { value: 'Fábio Bahiense' } });
+    fireEvent.click(screen.getByRole('button', { name: /cadastrar/i }));
+
+    // Cadastrar a pessoa leva direto para a página dela, ainda sem credenciais.
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Fábio Bahiense' })).toBeTruthy());
+    expect(screen.getByText(/nenhuma credencial encontrada/i)).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /adicionar credencial/i }));
     await waitFor(() => expect(screen.getByLabelText(/nome do serviço/i)).toBeTruthy());
 
-    fireEvent.input(screen.getByLabelText(/^pessoa/i), { target: { value: 'Fábio Bahiense' } });
+    // A pessoa já vem pré-selecionada — não precisa escolher de novo.
+    expect((screen.getByLabelText(/^pessoa/i) as HTMLSelectElement).value).toBe('Fábio Bahiense');
     fireEvent.input(screen.getByLabelText(/nome do serviço/i), { target: { value: 'Serviço Fluxo Completo' } });
     fireEvent.change(screen.getByLabelText(/categoria/i), { target: { value: 'Trabalho' } });
     fireEvent.input(screen.getByLabelText(/^senha/i), { target: { value: 'senha-fluxo-ficticia' } });
     fireEvent.click(screen.getByRole('button', { name: /salvar/i }));
 
+    // Volta para a página da pessoa e a credencial aparece lá.
     await waitFor(() => expect(screen.getByText('Serviço Fluxo Completo')).toBeTruthy());
 
+    // Configurações só fica acessível a partir da tela de Pessoas.
+    fireEvent.click(screen.getByRole('button', { name: /voltar/i }));
+    await waitFor(() => expect(screen.getByLabelText('Configurações')).toBeTruthy());
     fireEvent.click(screen.getByLabelText('Configurações'));
     await waitFor(() => expect(screen.getByRole('button', { name: /bloquear cofre/i })).toBeTruthy());
     fireEvent.click(screen.getByRole('button', { name: /bloquear cofre/i }));
@@ -50,6 +66,9 @@ describe('App', () => {
     fireEvent.input(screen.getByLabelText(/senha mestra/i), { target: { value: 'frase-senha-app-ficticia' } });
     fireEvent.click(screen.getByRole('button', { name: /desbloquear/i }));
 
+    // Desbloquear volta para a tela de Pessoas — a pessoa cadastrada continua lá.
+    await waitFor(() => expect(screen.getByText('Fábio Bahiense')).toBeTruthy());
+    fireEvent.click(screen.getByText('Fábio Bahiense'));
     await waitFor(() => expect(screen.getByText('Serviço Fluxo Completo')).toBeTruthy());
   });
 
@@ -71,7 +90,7 @@ describe('App', () => {
     await waitFor(() => expect(openSessionSpy).toHaveBeenCalledTimes(1));
     const { session }: { session: VaultSession } = await openSessionSpy.mock.results[0]!.value;
 
-    await waitFor(() => expect(screen.getByRole('button', { name: /adicionar credencial/i })).toBeTruthy());
+    await waitFor(() => expect(screen.getByRole('button', { name: /nova pessoa/i })).toBeTruthy());
     expect(session.dek.every((b) => b === 0)).toBe(false);
     expect(session.closed).toBe(false);
 

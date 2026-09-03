@@ -6,8 +6,11 @@ export function CredentialListItem(props: {
   credential: Credential;
   onSelect: (id: string) => void;
   onToggleFavorite: (id: string) => Promise<void> | void;
+  /** Esconde o nome da pessoa na linha — usado quando a lista já está toda
+   * dentro do contexto de uma única pessoa (repetir o nome seria ruído). */
+  showOwner?: boolean;
 }) {
-  const { credential } = props;
+  const { credential, showOwner = true } = props;
 
   return (
     <li style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', borderBottom: '1px solid var(--color-border)' }}>
@@ -33,7 +36,7 @@ export function CredentialListItem(props: {
       >
         <span style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
           <span>{credential.serviceName}</span>
-          {credential.owner && <span style={{ color: 'var(--color-border)', fontSize: '0.85em' }}>{credential.owner}</span>}
+          {showOwner && credential.owner && <span style={{ color: 'var(--color-border)', fontSize: '0.85em' }}>{credential.owner}</span>}
         </span>
         <span style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
           <CategoryBadge category={credential.category} />

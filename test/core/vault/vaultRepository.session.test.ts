@@ -65,12 +65,12 @@ describe('VaultRepository — sessão', () => {
     await expect(repo.openSession('senha-errada')).rejects.toThrow(VaultAuthenticationFailedError);
   });
 
-  it('saveCredentials persiste, e uma nova sessão vê os dados atualizados', async () => {
+  it('saveVaultData persiste, e uma nova sessão vê os dados atualizados', async () => {
     await repo.createVault('senha-ficticia', params);
     const { session } = await repo.openSession('senha-ficticia');
 
     const novaCredencial = sampleCredential({ id: 'id-novo-002', serviceName: 'Novo Serviço' });
-    await repo.saveCredentials(session, [novaCredencial]);
+    await repo.saveVaultData(session, { people: [], credentials: [novaCredencial] });
     repo.closeSession(session);
 
     const { session: sessao2, credentials } = await repo.openSession('senha-ficticia');
@@ -79,12 +79,27 @@ describe('VaultRepository — sessão', () => {
     repo.closeSession(sessao2);
   });
 
-  it('saveCredentials não altera a seção de chave embrulhada (não precisa da senha de novo)', async () => {
+  it('saveVaultData persiste pessoas junto com credenciais, e uma nova sessão vê ambas', async () => {
     await repo.createVault('senha-ficticia', params);
     const { session } = await repo.openSession('senha-ficticia');
 
-    // saveCredentials não recebe senha nenhuma — só a sessão em memória.
-    await repo.saveCredentials(session, [sampleCredential()]);
+    const pessoa = { id: 'id-pessoa-001', name: 'Pessoa Fictícia', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' };
+    await repo.saveVaultData(session, { people: [pessoa], credentials: [sampleCredential()] });
+    repo.closeSession(session);
+
+    const { session: sessao2, people, credentials } = await repo.openSession('senha-ficticia');
+    expect(people).toHaveLength(1);
+    expect(people[0]?.name).toBe('Pessoa Fictícia');
+    expect(credentials).toHaveLength(1);
+    repo.closeSession(sessao2);
+  });
+
+  it('saveVaultData não altera a seção de chave embrulhada (não precisa da senha de novo)', async () => {
+    await repo.createVault('senha-ficticia', params);
+    const { session } = await repo.openSession('senha-ficticia');
+
+    // saveVaultData não recebe senha nenhuma — só a sessão em memória.
+    await repo.saveVaultData(session, { people: [], credentials: [sampleCredential()] });
 
     const { credentials } = await repo.openSession('senha-ficticia');
     expect(credentials).toHaveLength(1);
@@ -102,7 +117,7 @@ describe('VaultRepository — sessão', () => {
     expect(copiaAntes.some((b) => b !== 0)).toBe(true);
   });
 
-  it('closeSession marca a sessão como fechada, e saveCredentials nela passa a lançar erro', async () => {
+  it('closeSession marca a sessão como fechada, e saveVaultData nela passa a lançar erro', async () => {
     await repo.createVault('senha-ficticia', params);
     const { session } = await repo.openSession('senha-ficticia');
 
@@ -112,10 +127,10 @@ describe('VaultRepository — sessão', () => {
 
     // Sem essa checagem, isto criptografaria com uma DEK zerada e destruiria
     // o cofre bom — ver Fix 5 da revisão final da Fase 2.
-    await expect(repo.saveCredentials(session, [sampleCredential()])).rejects.toThrow('Sessão já foi bloqueada.');
+    await expect(repo.saveVaultData(session, { people: [], credentials: [sampleCredential()] })).rejects.toThrow('Sessão já foi bloqueada.');
   });
 
-  it('saveCredentials com sessão aberta antes de um changeMasterPassword ainda produz um cofre abrível com a nova senha', async () => {
+  it('saveVaultData com sessão aberta antes de um changeMasterPassword ainda produz um cofre abrível com a nova senha', async () => {
     await repo.createVault('senha-ficticia', params);
     const { session } = await repo.openSession('senha-ficticia');
 
@@ -124,7 +139,7 @@ describe('VaultRepository — sessão', () => {
     await repo.changeMasterPassword('senha-ficticia', 'senha-nova-ficticia', params);
 
     const credencialPosTroca = sampleCredential({ id: 'id-pos-troca-003', serviceName: 'Serviço Pós-Troca' });
-    await repo.saveCredentials(session, [credencialPosTroca]);
+    await repo.saveVaultData(session, { people: [], credentials: [credencialPosTroca] });
     repo.closeSession(session);
 
     const { session: novaSessao, credentials } = await repo.openSession('senha-nova-ficticia');
