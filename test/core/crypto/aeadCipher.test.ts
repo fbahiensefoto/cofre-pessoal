@@ -44,7 +44,7 @@ describe('AeadCipher', () => {
 
     const cipherText = aead.encrypt(message, nonce, key);
     const adulterado = new Uint8Array(cipherText);
-    adulterado[0] ^= 0xff;
+    adulterado[0]! ^= 0xff;
 
     expect(() => aead.decrypt(adulterado, nonce, key)).toThrow();
   });
