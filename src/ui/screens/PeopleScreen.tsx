@@ -39,9 +39,11 @@ export function PeopleScreen(props: { onSelectPerson: (name: string) => void; on
 
     setSalvando(true);
     try {
-      const pessoa = await addPerson(nomeNormalizado);
+      // Fica na tela de Pessoas: a pessoa recém-criada aparecer na lista já é a
+      // confirmação. Pular direto pra página dela (vazia) fazia parecer que
+      // cadastrar não tinha funcionado.
+      await addPerson(nomeNormalizado);
       setNome('');
-      props.onSelectPerson(pessoa.name);
     } catch {
       setErro('Não foi possível cadastrar a pessoa. Tente novamente.');
     } finally {

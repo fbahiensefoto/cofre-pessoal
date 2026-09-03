@@ -99,7 +99,7 @@ describe('PeopleScreen', () => {
     expect(screen.getByText(/nenhuma pessoa encontrada/i)).toBeTruthy();
   });
 
-  it('cadastra a pessoa direto nesta tela e chama onSelectPerson com o nome, ao salvar', async () => {
+  it('cadastra a pessoa direto nesta tela, sem navegar pra outra página', async () => {
     const addPerson = vi.fn().mockImplementation(async (name: string) => ({
       id: 'id-nova-pessoa',
       name,
@@ -115,7 +115,10 @@ describe('PeopleScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: /cadastrar/i }));
 
     await waitFor(() => expect(addPerson).toHaveBeenCalledWith('Maria Fictícia'));
-    expect(onSelectPerson).toHaveBeenCalledWith('Maria Fictícia');
+    // Ficar na tela é a confirmação — pular pra página (vazia) da pessoa recém-criada
+    // parecia, pra quem estava usando, que cadastrar não tinha feito nada.
+    expect(onSelectPerson).not.toHaveBeenCalled();
+    expect((screen.getByLabelText(/nova pessoa/i) as HTMLInputElement).value).toBe('');
   });
 
   it('não deixa cadastrar com o nome em branco', async () => {

@@ -37,7 +37,10 @@ describe('App', () => {
     fireEvent.input(screen.getByLabelText(/nova pessoa/i), { target: { value: 'Fábio Bahiense' } });
     fireEvent.click(screen.getByRole('button', { name: /cadastrar/i }));
 
-    // Cadastrar a pessoa leva direto para a página dela, ainda sem credenciais.
+    // Cadastrar fica na tela de Pessoas — a pessoa recém-criada aparecer na lista
+    // é a confirmação. Só entra na página dela ao tocar no nome.
+    await waitFor(() => expect(screen.getByText('Fábio Bahiense')).toBeTruthy());
+    fireEvent.click(screen.getByText('Fábio Bahiense'));
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Fábio Bahiense' })).toBeTruthy());
     expect(screen.getByText(/nenhuma credencial encontrada/i)).toBeTruthy();
 
