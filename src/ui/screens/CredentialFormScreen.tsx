@@ -3,6 +3,7 @@ import type { Credential } from '../../core/model/credential';
 import { useVaultSession } from '../state/VaultSessionContext';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { detalheDoErro } from '../lib/errorMessage';
 
 type FormData = Omit<Credential, 'id' | 'createdAt' | 'updatedAt'>;
 
@@ -80,8 +81,8 @@ export function CredentialFormScreen(props: {
       // trocar a Pessoa aqui move a credencial para a página dela; navegar de
       // volta para a pessoa antiga a deixaria "sumida" da tela em que estava.
       props.onDone(dados.owner);
-    } catch {
-      setErro('Não foi possível salvar a credencial. Tente novamente.');
+    } catch (e) {
+      setErro(`Não foi possível salvar a credencial. Tente novamente. (${detalheDoErro(e)})`);
     } finally {
       setSalvando(false);
     }
@@ -93,8 +94,8 @@ export function CredentialFormScreen(props: {
     try {
       await deleteCredential(props.credentialId);
       props.onDone(props.initialOwner);
-    } catch {
-      setErro('Não foi possível excluir a credencial. Tente novamente.');
+    } catch (e) {
+      setErro(`Não foi possível excluir a credencial. Tente novamente. (${detalheDoErro(e)})`);
     }
   }
 

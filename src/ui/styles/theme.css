@@ -3,7 +3,7 @@
  * explícito do usuário ("preto, branco, duas tonalidades de cinza
  * diferentes"). --color-danger é a única exceção: cor de ação destrutiva é
  * convenção de segurança/acessibilidade, não escolha decorativa.
- *   --color-bg      preto (ou branco no tema claro) — página.
+ *   --color-bg      cinza bem escuro (ou branco no tema claro) — página.
  *   --color-surface cinza 1 (mais escuro no escuro) — preenchimento de
  *                   caixas: input, select, textarea, button, diálogo.
  *   --color-accent  cinza 2 (mais claro no escuro) — bordas dessas caixas,
@@ -25,7 +25,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
-    --color-bg: #0d0d0f;
+    --color-bg: #17181b;
     --color-text: #f2f2f4;
     --color-danger: #ff6b6b;
     --color-surface: #2a2c30;

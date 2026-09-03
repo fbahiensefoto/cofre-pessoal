@@ -5,6 +5,7 @@ import type { Credential } from '../../core/model/credential';
 import type { Person } from '../../core/model/person';
 import type { VaultRepository, VaultSession } from '../../core/vault/vaultRepository';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
+import { detalheDoErro } from '../lib/errorMessage';
 
 export function WelcomeScreen(props: {
   repository: VaultRepository;
@@ -35,8 +36,8 @@ export function WelcomeScreen(props: {
       await props.repository.createVault(senha, params);
       const result = await props.repository.openSession(senha);
       props.onCreated(result);
-    } catch {
-      setErro('Não foi possível criar o cofre. Tente novamente.');
+    } catch (e) {
+      setErro(`Não foi possível criar o cofre. Tente novamente. (${detalheDoErro(e)})`);
     } finally {
       setCriando(false);
     }

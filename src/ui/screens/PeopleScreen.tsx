@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'preact/hooks';
 import { useVaultSession } from '../state/VaultSessionContext';
 import { GearIcon } from '../components/icons';
+import { detalheDoErro } from '../lib/errorMessage';
 
 export function PeopleScreen(props: { onSelectPerson: (name: string) => void; onOpenSettings: () => void }) {
   const { people, credentials, addPerson } = useVaultSession();
@@ -45,8 +46,8 @@ export function PeopleScreen(props: { onSelectPerson: (name: string) => void; on
       // cadastrar não tinha funcionado.
       await addPerson(nomeNormalizado);
       setNome('');
-    } catch {
-      setErro('Não foi possível cadastrar a pessoa. Tente novamente.');
+    } catch (e) {
+      setErro(`Não foi possível cadastrar a pessoa. Tente novamente. (${detalheDoErro(e)})`);
     } finally {
       setSalvando(false);
     }

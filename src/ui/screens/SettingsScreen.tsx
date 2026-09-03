@@ -5,6 +5,7 @@ import { useTheme } from '../lib/useTheme';
 import { useVaultSession } from '../state/VaultSessionContext';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
 import { ChevronLeftIcon } from '../components/icons';
+import { detalheDoErro } from '../lib/errorMessage';
 
 export function SettingsScreen(props: { repository: VaultRepository; onBack: () => void }) {
   const { preference, setPreference } = useTheme();
@@ -39,8 +40,8 @@ export function SettingsScreen(props: { repository: VaultRepository; onBack: () 
       setSenhaAtual('');
       setNovaSenha('');
       setConfirmarNovaSenha('');
-    } catch {
-      setErro('Não foi possível trocar a senha. Confira a senha atual.');
+    } catch (e) {
+      setErro(`Não foi possível trocar a senha. Confira a senha atual. (${detalheDoErro(e)})`);
     } finally {
       setTrocando(false);
     }
