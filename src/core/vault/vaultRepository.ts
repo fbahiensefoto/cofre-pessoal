@@ -138,6 +138,35 @@ export class VaultRepository {
     session.closed = true;
   }
 
+  /**
+   * Devolve os bytes do cofre exatamente como estão gravados — já cifrados,
+   * é o mesmo arquivo que já vive no IndexedDB. Não decifra nem recodifica
+   * nada: o backup é literalmente uma cópia do arquivo do cofre.
+   */
+  async exportBytes(): Promise<Uint8Array> {
+    if (!(await this.storage.exists())) {
+      throw new VaultNotFoundError();
+    }
+    return this.storage.readBytes();
+  }
+
+  /**
+   * Substitui o cofre atual pelos bytes de um backup. Valida que [bytes] tem
+   * a forma de um arquivo de cofre válido (cabeçalho reconhecível, versão
+   * suportada) ANTES de gravar — sem isso, selecionar por engano um arquivo
+   * qualquer destruiria o cofre atual sem nenhuma cópia de segurança dele.
+   * Não confere a senha: a restauração só troca qual arquivo está gravado,
+   * o desbloqueio (com a senha de quando aquele backup foi feito) continua
+   * sendo o próximo passo, como em qualquer abertura normal de cofre.
+   */
+  async importBytes(bytes: Uint8Array): Promise<void> {
+    const file = VaultFile.fromBytes(bytes);
+    if (file.header.formatVersion !== CURRENT_VERSION) {
+      throw new VaultUnsupportedVersionError(file.header.formatVersion);
+    }
+    await this.storage.writeAtomic(bytes);
+  }
+
   private encryptPayload(header: VaultHeader, wrapped: WrappedDek, dek: Uint8Array, data: VaultData): VaultFile {
     const payload = new TextEncoder().encode(JSON.stringify(data));
     const nonce = this.aead.generateNonce();

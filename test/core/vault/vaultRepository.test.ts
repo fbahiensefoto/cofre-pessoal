@@ -6,6 +6,7 @@ import { interactiveParams, type Argon2Params } from '../../../src/core/crypto/k
 import type { Credential } from '../../../src/core/model/credential';
 import {
   VaultAuthenticationFailedError,
+  VaultCorruptHeaderError,
   VaultNotFoundError,
   VaultUnsupportedVersionError,
 } from '../../../src/core/vault/vaultExceptions';
@@ -142,5 +143,72 @@ describe('VaultRepository', () => {
     expect(credenciaisAbertas).toHaveLength(1);
     expect(credenciaisAbertas[0]?.serviceName).toBe(nomeServico);
     expect(credenciaisAbertas[0]?.password).toBe(senhaCredencial);
+  });
+
+  describe('exportBytes / importBytes (backup e restauração)', () => {
+    it('exportBytes devolve exatamente os mesmos bytes gravados no armazenamento', async () => {
+      await repo.createVault('senha-backup-ficticia', params);
+
+      const exportado = await repo.exportBytes();
+      const direto = await new VaultStorage().readBytes();
+
+      expect(exportado).toEqual(direto);
+    });
+
+    it('exportBytes sem cofre existente lança VaultNotFoundError', async () => {
+      await expect(repo.exportBytes()).rejects.toThrow(VaultNotFoundError);
+    });
+
+    it('importBytes seguido de openVault com a senha do backup funciona, mesmo com uma senha atual diferente', async () => {
+      // Simula restaurar um backup feito noutro momento (senha diferente da
+      // que estaria em uso no cofre atual, se houvesse um).
+      const outroRepo = new VaultRepository(sodium, new VaultStorage());
+      await outroRepo.createVault('senha-do-backup-ficticia', params, [
+        {
+          id: 'id-backup-001',
+          owner: 'Titular Do Backup',
+          serviceName: 'Serviço Do Backup',
+          category: 'site',
+          password: 'senha-credencial-do-backup',
+          tags: [],
+          favorite: false,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+      ]);
+      const bytesDoBackup = await outroRepo.exportBytes();
+
+      await repo.importBytes(bytesDoBackup);
+
+      const credenciais = await repo.openVault('senha-do-backup-ficticia');
+      expect(credenciais).toHaveLength(1);
+      expect(credenciais[0]?.serviceName).toBe('Serviço Do Backup');
+    });
+
+    it('importBytes com um arquivo qualquer (não um cofre) lança e NÃO apaga o cofre atual', async () => {
+      await repo.createVault('senha-atual-ficticia', params);
+
+      const arquivoQualquer = new TextEncoder().encode('isto não é um arquivo de cofre, é só um texto qualquer');
+      await expect(repo.importBytes(arquivoQualquer)).rejects.toThrow(VaultCorruptHeaderError);
+
+      // O cofre atual precisa continuar intacto — a validação tem que
+      // acontecer ANTES de qualquer gravação.
+      const credenciais = await repo.openVault('senha-atual-ficticia');
+      expect(credenciais).toEqual([]);
+    });
+
+    it('importBytes com versão de formato desconhecida lança e não apaga o cofre atual', async () => {
+      await repo.createVault('senha-atual-ficticia', params);
+
+      const backup = new Uint8Array(await new VaultRepository(sodium, new VaultStorage()).exportBytes());
+      const adulterado = new Uint8Array(backup);
+      adulterado[4] = 0x00;
+      adulterado[5] = 0x63; // versão 99, inexistente
+
+      await expect(repo.importBytes(adulterado)).rejects.toThrow(VaultUnsupportedVersionError);
+
+      const credenciais = await repo.openVault('senha-atual-ficticia');
+      expect(credenciais).toEqual([]);
+    });
   });
 });

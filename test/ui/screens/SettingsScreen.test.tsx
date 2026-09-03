@@ -9,7 +9,13 @@ import { VaultRepository } from '../../../src/core/vault/vaultRepository';
 import { VaultStorage } from '../../../src/core/vault/vaultStorage';
 import type { VaultSessionContextValue } from '../../../src/ui/state/VaultSessionContext';
 import * as VaultSessionContext from '../../../src/ui/state/VaultSessionContext';
+import * as BackupFile from '../../../src/ui/lib/backupFile';
 import { SettingsScreen } from '../../../src/ui/screens/SettingsScreen';
+
+function selecionarArquivo(input: HTMLElement, arquivo: File) {
+  Object.defineProperty(input, 'files', { value: [arquivo], configurable: true });
+  fireEvent.change(input);
+}
 
 function mockVaultSession(overrides: Partial<VaultSessionContextValue> = {}): VaultSessionContextValue {
   return {
@@ -123,5 +129,77 @@ describe('SettingsScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: /bloquear cofre/i }));
 
     expect(lock).toHaveBeenCalledTimes(1);
+  });
+
+  describe('backup', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('"Baixar backup" exporta os bytes do repository e entrega via shareOrDownloadBackup', async () => {
+      const shareSpy = vi.spyOn(BackupFile, 'shareOrDownloadBackup').mockResolvedValue('compartilhado');
+      const exportSpy = vi.spyOn(repository, 'exportBytes');
+      render(<SettingsScreen repository={repository} onBack={() => {}} />);
+
+      fireEvent.click(screen.getByRole('button', { name: /baixar backup/i }));
+
+      await waitFor(() => expect(screen.getByText(/pronto para enviar/i)).toBeTruthy());
+      expect(exportSpy).toHaveBeenCalledTimes(1);
+      const bytesExportados = await exportSpy.mock.results[0]!.value;
+      expect(shareSpy).toHaveBeenCalledWith(bytesExportados);
+    });
+
+    it('selecionar um arquivo de backup abre a confirmação, sem restaurar ainda', () => {
+      render(<SettingsScreen repository={repository} onBack={() => {}} />);
+      const importSpy = vi.spyOn(repository, 'importBytes');
+
+      selecionarArquivo(screen.getByLabelText(/restaurar de um backup/i), new File(['bytes-ficticios'], 'backup.cofre'));
+
+      expect(screen.getByRole('dialog')).toBeTruthy();
+      expect(importSpy).not.toHaveBeenCalled();
+    });
+
+    it('cancelar a restauração não chama importBytes nem lock', () => {
+      const lock = vi.fn();
+      vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockVaultSession({ lock }));
+      render(<SettingsScreen repository={repository} onBack={() => {}} />);
+      const importSpy = vi.spyOn(repository, 'importBytes');
+
+      selecionarArquivo(screen.getByLabelText(/restaurar de um backup/i), new File(['bytes-ficticios'], 'backup.cofre'));
+      fireEvent.click(screen.getByRole('button', { name: /^cancelar$/i }));
+
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(importSpy).not.toHaveBeenCalled();
+      expect(lock).not.toHaveBeenCalled();
+    });
+
+    it('confirmar a restauração chama importBytes com os bytes do arquivo e depois bloqueia a sessão', async () => {
+      const lock = vi.fn();
+      vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockVaultSession({ lock }));
+      const importSpy = vi.spyOn(repository, 'importBytes').mockResolvedValue(undefined);
+      render(<SettingsScreen repository={repository} onBack={() => {}} />);
+
+      selecionarArquivo(screen.getByLabelText(/restaurar de um backup/i), new File([new Uint8Array([1, 2, 3])], 'backup.cofre'));
+      fireEvent.click(screen.getByRole('button', { name: /^confirmar$/i }));
+
+      await waitFor(() => expect(importSpy).toHaveBeenCalledTimes(1));
+      expect(Array.from(importSpy.mock.calls[0]![0] as Uint8Array)).toEqual([1, 2, 3]);
+      await waitFor(() => expect(lock).toHaveBeenCalledTimes(1));
+    });
+
+    it('restauração com arquivo inválido mostra erro e não bloqueia a sessão', async () => {
+      const lock = vi.fn();
+      vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockVaultSession({ lock }));
+      vi.spyOn(repository, 'importBytes').mockRejectedValue(new Error('não é um cofre válido'));
+      render(<SettingsScreen repository={repository} onBack={() => {}} />);
+
+      selecionarArquivo(screen.getByLabelText(/restaurar de um backup/i), new File(['lixo'], 'nao-e-um-backup.txt'));
+      fireEvent.click(screen.getByRole('button', { name: /^confirmar$/i }));
+
+      await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
+      expect(lock).not.toHaveBeenCalled();
+      // O diálogo fecha mesmo no erro — não fica "preso" pedindo confirmação de novo.
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
   });
 });

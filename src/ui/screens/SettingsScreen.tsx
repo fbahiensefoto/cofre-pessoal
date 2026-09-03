@@ -1,11 +1,13 @@
-import { useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { interactiveParams } from '../../core/crypto/keyDerivation';
 import type { VaultRepository } from '../../core/vault/vaultRepository';
 import { useTheme } from '../lib/useTheme';
 import { useVaultSession } from '../state/VaultSessionContext';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ChevronLeftIcon } from '../components/icons';
 import { detalheDoErro } from '../lib/errorMessage';
+import { shareOrDownloadBackup, readFileAsBytes } from '../lib/backupFile';
 
 export function SettingsScreen(props: { repository: VaultRepository; onBack: () => void }) {
   const { preference, setPreference } = useTheme();
@@ -16,6 +18,13 @@ export function SettingsScreen(props: { repository: VaultRepository; onBack: () 
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [trocando, setTrocando] = useState(false);
+
+  const [exportando, setExportando] = useState(false);
+  const [mensagemBackup, setMensagemBackup] = useState<string | null>(null);
+  const [erroBackup, setErroBackup] = useState<string | null>(null);
+  const [arquivoParaRestaurar, setArquivoParaRestaurar] = useState<File | null>(null);
+  const [restaurando, setRestaurando] = useState(false);
+  const inputArquivoRef = useRef<HTMLInputElement>(null);
 
   async function handleChangePassword(event: Event) {
     event.preventDefault();
@@ -44,6 +53,64 @@ export function SettingsScreen(props: { repository: VaultRepository; onBack: () 
       setErro(`Não foi possível trocar a senha. Confira a senha atual. (${detalheDoErro(e)})`);
     } finally {
       setTrocando(false);
+    }
+  }
+
+  async function handleExportBackup() {
+    setErroBackup(null);
+    setMensagemBackup(null);
+    setExportando(true);
+    try {
+      const bytes = await props.repository.exportBytes();
+      const resultado = await shareOrDownloadBackup(bytes);
+      setMensagemBackup(
+        resultado === 'compartilhado' ? 'Backup pronto para enviar.' : 'Backup baixado — envie o arquivo de onde ele foi salvo.',
+      );
+    } catch (e) {
+      setErroBackup(`Não foi possível preparar o backup. (${detalheDoErro(e)})`);
+    } finally {
+      setExportando(false);
+    }
+  }
+
+  function handleFileSelected(event: Event) {
+    const arquivo = (event.target as HTMLInputElement).files?.[0];
+    if (arquivo) {
+      setErroBackup(null);
+      setArquivoParaRestaurar(arquivo);
+    }
+  }
+
+  function handleCancelRestore() {
+    setArquivoParaRestaurar(null);
+    if (inputArquivoRef.current) {
+      inputArquivoRef.current.value = '';
+    }
+  }
+
+  async function handleConfirmRestore() {
+    if (!arquivoParaRestaurar) return;
+    setRestaurando(true);
+    setErroBackup(null);
+    try {
+      const bytes = await readFileAsBytes(arquivoParaRestaurar);
+      await props.repository.importBytes(bytes);
+      setArquivoParaRestaurar(null);
+      if (inputArquivoRef.current) {
+        inputArquivoRef.current.value = '';
+      }
+      // O cofre gravado agora é outro arquivo (senha, dados, tudo) — a
+      // sessão em memória não corresponde mais a ele. Bloquear força
+      // desbloquear de novo com a senha de quando aquele backup foi feito.
+      lock();
+    } catch (e) {
+      setErroBackup(`Não foi possível restaurar esse arquivo — confira se é um backup do Cofre Pessoal. (${detalheDoErro(e)})`);
+      setArquivoParaRestaurar(null);
+      if (inputArquivoRef.current) {
+        inputArquivoRef.current.value = '';
+      }
+    } finally {
+      setRestaurando(false);
     }
   }
 
@@ -80,6 +147,27 @@ export function SettingsScreen(props: { repository: VaultRepository; onBack: () 
           />
           Escuro
         </label>
+      </section>
+
+      <section>
+        <h2>Backup</h2>
+        <p>Uma cópia cifrada de todas as suas pessoas e credenciais, para guardar em outro lugar (ex.: enviar para você mesmo por mensagem).</p>
+        <button type="button" onClick={handleExportBackup} disabled={exportando}>
+          {exportando ? 'Preparando...' : 'Baixar backup'}
+        </button>
+
+        <label htmlFor="restaurar-backup">Restaurar de um backup</label>
+        <input id="restaurar-backup" ref={inputArquivoRef} type="file" accept=".cofre" onChange={handleFileSelected} />
+        <p style={{ marginTop: '4px', fontSize: '0.85em', color: 'var(--color-accent)' }}>
+          Substitui tudo que está neste aparelho pelo conteúdo do arquivo escolhido.
+        </p>
+
+        {erroBackup && (
+          <p role="alert" style={{ color: 'var(--color-danger)' }}>
+            {erroBackup}
+          </p>
+        )}
+        {mensagemBackup && <p>{mensagemBackup}</p>}
       </section>
 
       <section>
@@ -126,6 +214,17 @@ export function SettingsScreen(props: { repository: VaultRepository; onBack: () 
       <button type="button" onClick={lock} style={{ marginTop: '16px' }}>
         Bloquear cofre
       </button>
+
+      <ConfirmDialog
+        open={arquivoParaRestaurar !== null}
+        title="Restaurar backup"
+        message="Isso substitui todas as pessoas e credenciais guardadas neste aparelho pelas do arquivo escolhido. Essa ação não pode ser desfeita. Depois de restaurar, você vai precisar desbloquear com a senha de quando esse backup foi feito. Tem certeza?"
+        onConfirm={() => {
+          void handleConfirmRestore();
+        }}
+        onCancel={handleCancelRestore}
+      />
+      {restaurando && <p role="status">Restaurando...</p>}
     </div>
   );
 }
