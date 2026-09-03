@@ -7,6 +7,7 @@ import { CredentialListItem } from '../../../src/ui/components/CredentialListIte
 function sampleCredential(overrides: Partial<Credential> = {}): Credential {
   return {
     id: 'id-item-teste',
+    owner: 'Cíntia de Souza',
     serviceName: 'Serviço Item Teste',
     category: 'e-mail',
     tags: ['pessoal', 'importante'],
@@ -19,9 +20,10 @@ function sampleCredential(overrides: Partial<Credential> = {}): Credential {
 }
 
 describe('CredentialListItem', () => {
-  it('mostra nome do serviço, categoria e tags', () => {
+  it('mostra nome do serviço, pessoa, categoria e tags', () => {
     render(<CredentialListItem credential={sampleCredential()} onSelect={() => {}} onToggleFavorite={() => {}} />);
     expect(screen.getByText('Serviço Item Teste')).toBeTruthy();
+    expect(screen.getByText('Cíntia de Souza')).toBeTruthy();
     expect(screen.getByText('e-mail')).toBeTruthy();
     expect(screen.getByText('pessoal')).toBeTruthy();
     expect(screen.getByText('importante')).toBeTruthy();

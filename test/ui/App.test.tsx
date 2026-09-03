@@ -34,6 +34,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: /adicionar credencial/i }));
     await waitFor(() => expect(screen.getByLabelText(/nome do serviço/i)).toBeTruthy());
 
+    fireEvent.input(screen.getByLabelText(/^pessoa/i), { target: { value: 'Fábio Bahiense' } });
     fireEvent.input(screen.getByLabelText(/nome do serviço/i), { target: { value: 'Serviço Fluxo Completo' } });
     fireEvent.change(screen.getByLabelText(/categoria/i), { target: { value: 'Trabalho' } });
     fireEvent.input(screen.getByLabelText(/^senha/i), { target: { value: 'senha-fluxo-ficticia' } });

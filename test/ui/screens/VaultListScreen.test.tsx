@@ -10,6 +10,7 @@ function sampleCredentials(): Credential[] {
   return [
     {
       id: 'id-1',
+      owner: 'Fábio Bahiense',
       serviceName: 'Banco Fictício',
       category: 'banco',
       tags: [],
@@ -20,6 +21,7 @@ function sampleCredentials(): Credential[] {
     },
     {
       id: 'id-2',
+      owner: 'Cíntia de Souza',
       serviceName: 'E-mail Fictício',
       category: 'e-mail',
       tags: [],
@@ -78,5 +80,40 @@ describe('VaultListScreen', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /adicionar credencial/i }));
     expect(onCreateNew).toHaveBeenCalled();
+  });
+
+  it('mostra um filtro por pessoa e filtra a lista ao clicar numa pessoa', () => {
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession());
+    render(<VaultListScreen onSelectCredential={() => {}} onCreateNew={() => {}} onOpenSettings={() => {}} />);
+
+    expect(screen.getByRole('button', { name: 'Fábio Bahiense' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Cíntia de Souza' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cíntia de Souza' }));
+
+    expect(screen.getByText('E-mail Fictício')).toBeTruthy();
+    expect(screen.queryByText('Banco Fictício')).toBeNull();
+  });
+
+  it('"Todos" volta a mostrar todas as credenciais depois de filtrar por pessoa', () => {
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession());
+    render(<VaultListScreen onSelectCredential={() => {}} onCreateNew={() => {}} onOpenSettings={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cíntia de Souza' }));
+    expect(screen.queryByText('Banco Fictício')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Todos' }));
+    expect(screen.getByText('Banco Fictício')).toBeTruthy();
+    expect(screen.getByText('E-mail Fictício')).toBeTruthy();
+  });
+
+  it('a busca por texto também encontra pelo nome da pessoa', () => {
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession());
+    render(<VaultListScreen onSelectCredential={() => {}} onCreateNew={() => {}} onOpenSettings={() => {}} />);
+
+    fireEvent.input(screen.getByLabelText(/pesquisar/i), { target: { value: 'Cíntia' } });
+
+    expect(screen.getByText('E-mail Fictício')).toBeTruthy();
+    expect(screen.queryByText('Banco Fictício')).toBeNull();
   });
 });

@@ -9,6 +9,7 @@ import { CredentialFormScreen } from '../../../src/ui/screens/CredentialFormScre
 function sampleCredential(): Credential {
   return {
     id: 'id-form',
+    owner: 'Cíntia de Souza',
     serviceName: 'Serviço Form',
     category: 'site',
     password: 'senha-form-ficticia',
@@ -39,13 +40,20 @@ describe('CredentialFormScreen', () => {
 
     render(<CredentialFormScreen onDone={onDone} onCancel={() => {}} />);
 
+    fireEvent.change(screen.getByLabelText(/^pessoa/i), { target: { value: '__nova__' } });
+    fireEvent.input(screen.getByLabelText(/nome da nova pessoa/i), { target: { value: 'Fábio Bahiense' } });
     fireEvent.input(screen.getByLabelText(/nome do serviço/i), { target: { value: 'Novo Serviço' } });
     fireEvent.change(screen.getByLabelText(/categoria/i), { target: { value: 'Trabalho' } });
     fireEvent.input(screen.getByLabelText(/^senha/i), { target: { value: 'nova-senha-ficticia' } });
     fireEvent.click(screen.getByRole('button', { name: /salvar/i }));
 
     await waitFor(() => expect(addCredential).toHaveBeenCalled());
-    expect(addCredential.mock.calls[0]![0]).toMatchObject({ serviceName: 'Novo Serviço', category: 'Trabalho', password: 'nova-senha-ficticia' });
+    expect(addCredential.mock.calls[0]![0]).toMatchObject({
+      owner: 'Fábio Bahiense',
+      serviceName: 'Novo Serviço',
+      category: 'Trabalho',
+      password: 'nova-senha-ficticia',
+    });
     expect(onDone).toHaveBeenCalled();
   });
 
@@ -56,6 +64,7 @@ describe('CredentialFormScreen', () => {
 
     render(<CredentialFormScreen credentialId="id-form" onDone={onDone} onCancel={() => {}} />);
 
+    expect((screen.getByLabelText(/^pessoa/i) as HTMLSelectElement).value).toBe('Cíntia de Souza');
     expect((screen.getByLabelText(/nome do serviço/i) as HTMLInputElement).value).toBe('Serviço Form');
     // "site" não está na lista fixa de categorias — precisa continuar selecionável e
     // preservado, para não corromper silenciosamente uma credencial já existente.
@@ -71,6 +80,24 @@ describe('CredentialFormScreen', () => {
       ),
     );
     expect(onDone).toHaveBeenCalled();
+  });
+
+  it('modo criação: escolher uma pessoa já cadastrada no select (sem passar por "+ Nova pessoa")', async () => {
+    const addCredential = vi.fn().mockResolvedValue(undefined);
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ addCredential }));
+    const onDone = vi.fn();
+
+    render(<CredentialFormScreen onDone={onDone} onCancel={() => {}} />);
+
+    expect(screen.queryByLabelText(/nome da nova pessoa/i)).toBeNull();
+    fireEvent.change(screen.getByLabelText(/^pessoa/i), { target: { value: 'Cíntia de Souza' } });
+    fireEvent.input(screen.getByLabelText(/nome do serviço/i), { target: { value: 'Novo Serviço' } });
+    fireEvent.change(screen.getByLabelText(/categoria/i), { target: { value: 'Trabalho' } });
+    fireEvent.input(screen.getByLabelText(/^senha/i), { target: { value: 'nova-senha-ficticia' } });
+    fireEvent.click(screen.getByRole('button', { name: /salvar/i }));
+
+    await waitFor(() => expect(addCredential).toHaveBeenCalled());
+    expect(addCredential.mock.calls[0]![0]).toMatchObject({ owner: 'Cíntia de Souza' });
   });
 
   it('modo edição: exclusão pede confirmação antes de chamar deleteCredential', async () => {

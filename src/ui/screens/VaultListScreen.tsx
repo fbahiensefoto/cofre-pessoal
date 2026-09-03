@@ -9,19 +9,26 @@ export function VaultListScreen(props: {
 }) {
   const { credentials, toggleFavorite } = useVaultSession();
   const [busca, setBusca] = useState('');
+  const [pessoaFiltro, setPessoaFiltro] = useState<string | null>(null);
+
+  const pessoas = useMemo(() => {
+    const distintas = new Set(credentials.map((c) => c.owner).filter((nome): nome is string => Boolean(nome)));
+    return [...distintas].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [credentials]);
 
   const filtradas = useMemo(() => {
     const termo = busca.trim().toLowerCase();
-    if (termo === '') {
-      return credentials;
-    }
-    return credentials.filter(
-      (c) =>
+    return credentials.filter((c) => {
+      const combinaBusca =
+        termo === '' ||
         c.serviceName.toLowerCase().includes(termo) ||
         c.category.toLowerCase().includes(termo) ||
-        c.tags.some((t) => t.toLowerCase().includes(termo)),
-    );
-  }, [credentials, busca]);
+        (c.owner ?? '').toLowerCase().includes(termo) ||
+        c.tags.some((t) => t.toLowerCase().includes(termo));
+      const combinaPessoa = pessoaFiltro === null || c.owner === pessoaFiltro;
+      return combinaBusca && combinaPessoa;
+    });
+  }, [credentials, busca, pessoaFiltro]);
 
   return (
     <div>
@@ -39,6 +46,30 @@ export function VaultListScreen(props: {
         value={busca}
         onInput={(e) => setBusca((e.target as HTMLInputElement).value)}
       />
+
+      {pessoas.length > 0 && (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '16px 0' }}>
+          <button
+            type="button"
+            aria-pressed={pessoaFiltro === null}
+            onClick={() => setPessoaFiltro(null)}
+            style={pessoaFiltro === null ? { background: 'var(--color-primary)', color: 'var(--color-bg)' } : undefined}
+          >
+            Todos
+          </button>
+          {pessoas.map((pessoa) => (
+            <button
+              key={pessoa}
+              type="button"
+              aria-pressed={pessoaFiltro === pessoa}
+              onClick={() => setPessoaFiltro(pessoa)}
+              style={pessoaFiltro === pessoa ? { background: 'var(--color-primary)', color: 'var(--color-bg)' } : undefined}
+            >
+              {pessoa}
+            </button>
+          ))}
+        </div>
+      )}
 
       {filtradas.length === 0 ? (
         <p>Nenhuma credencial encontrada.</p>

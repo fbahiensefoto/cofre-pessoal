@@ -17,6 +17,7 @@ function TestConsumer() {
       <button
         onClick={() =>
           addCredential({
+            owner: 'Titular Fictício',
             serviceName: 'Serviço Teste',
             category: 'site',
             password: 'senha-ficticia-teste',
@@ -35,6 +36,7 @@ function TestConsumer() {
           <button
             onClick={() =>
               updateCredential(c.id, {
+                owner: c.owner,
                 serviceName: `${c.serviceName} Editado`,
                 category: c.category,
                 password: c.password,

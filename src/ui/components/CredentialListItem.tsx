@@ -31,7 +31,10 @@ export function CredentialListItem(props: {
         onClick={() => props.onSelect(credential.id)}
         style={{ flex: 1, textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '4px', minHeight: '44px' }}
       >
-        <span>{credential.serviceName}</span>
+        <span style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+          <span>{credential.serviceName}</span>
+          {credential.owner && <span style={{ color: 'var(--color-border)', fontSize: '0.85em' }}>{credential.owner}</span>}
+        </span>
         <span style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
           <CategoryBadge category={credential.category} />
           <TagList tags={credential.tags} />

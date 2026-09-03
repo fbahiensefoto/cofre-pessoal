@@ -1,5 +1,6 @@
 export interface Credential {
   id: string;
+  owner: string;
   serviceName: string;
   category: string;
   url?: string;

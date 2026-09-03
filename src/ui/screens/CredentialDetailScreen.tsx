@@ -25,6 +25,11 @@ export function CredentialDetailScreen(props: { credentialId: string; onBack: ()
         ← Voltar
       </button>
       <h1>{credencial.serviceName}</h1>
+      {credencial.owner && (
+        <p>
+          <strong>Pessoa:</strong> {credencial.owner}
+        </p>
+      )}
       <CategoryBadge category={credencial.category} />
       <TagList tags={credencial.tags} />
 

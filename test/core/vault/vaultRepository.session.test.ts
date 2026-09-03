@@ -11,6 +11,7 @@ import { VaultStorage } from '../../../src/core/vault/vaultStorage';
 function sampleCredential(overrides: Partial<Credential> = {}): Credential {
   return {
     id: 'id-ficticio-sessao-001',
+    owner: 'Titular Fictício',
     serviceName: 'Serviço Fictício de Sessão',
     category: 'site',
     password: 'senha-ficticia-sessao',

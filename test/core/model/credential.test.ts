@@ -5,6 +5,7 @@ describe('Credential', () => {
   it('round-trip: JSON.parse(JSON.stringify()) preserva todos os campos', () => {
     const original: Credential = {
       id: 'id-ficticio-001',
+      owner: 'Titular Fictício',
       serviceName: 'Serviço Fictício',
       category: 'e-mail',
       url: 'https://exemplo.invalido',
@@ -25,6 +26,7 @@ describe('Credential', () => {
   it('campos opcionais podem ser omitidos', () => {
     const credential: Credential = {
       id: 'id-ficticio-002',
+      owner: 'Outro Titular Fictício',
       serviceName: 'Outro Serviço Fictício',
       category: 'site',
       password: 'outra-senha-ficticia',

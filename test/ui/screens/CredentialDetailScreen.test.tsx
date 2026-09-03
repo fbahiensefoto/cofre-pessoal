@@ -9,6 +9,7 @@ import { CredentialDetailScreen } from '../../../src/ui/screens/CredentialDetail
 function sampleCredential(): Credential {
   return {
     id: 'id-detalhe',
+    owner: 'Fábio Bahiense',
     serviceName: 'Serviço Detalhe',
     category: 'site',
     username: 'usuario.ficticio',
@@ -38,6 +39,7 @@ describe('CredentialDetailScreen', () => {
     render(<CredentialDetailScreen credentialId="id-detalhe" onBack={() => {}} onEdit={() => {}} />);
 
     expect(screen.getByText('Serviço Detalhe')).toBeTruthy();
+    expect(screen.getByText('Fábio Bahiense')).toBeTruthy();
     expect(screen.getByText('usuario.ficticio')).toBeTruthy();
     expect(screen.queryByText('senha-secreta-ficticia')).toBeNull();
   });

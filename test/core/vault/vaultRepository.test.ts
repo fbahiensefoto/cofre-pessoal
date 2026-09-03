@@ -84,6 +84,7 @@ describe('VaultRepository', () => {
     const nomeServico = 'Serviço Fictício De Rotação ABC';
     const credencial: Credential = {
       id: 'id-ficticio-004',
+      owner: 'Titular Fictício',
       serviceName: nomeServico,
       category: 'e-mail',
       username: 'usuario.rotacao.ficticio@exemplo.invalido',
@@ -112,6 +113,7 @@ describe('VaultRepository', () => {
     const nomeServico = 'Serviço Fictício De Teste XYZ';
     const credencial: Credential = {
       id: 'id-ficticio-003',
+      owner: 'Titular Fictício',
       serviceName: nomeServico,
       category: 'e-mail',
       username: 'usuario.ficticio.teste@exemplo.invalido',
