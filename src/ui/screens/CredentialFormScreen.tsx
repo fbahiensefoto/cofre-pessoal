@@ -6,6 +6,8 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 
 type FormData = Omit<Credential, 'id' | 'createdAt' | 'updatedAt'>;
 
+const CATEGORIAS = ['Pessoal', 'Trabalho', 'Financeiro', 'Compras', 'Redes Sociais', 'E-mail', 'Terceiros', 'Outros'];
+
 function emptyForm(): FormData {
   return { serviceName: '', category: '', url: '', username: '', password: '', notes: '', tags: [], favorite: false };
 }
@@ -13,6 +15,9 @@ function emptyForm(): FormData {
 export function CredentialFormScreen(props: { credentialId?: string; onDone: () => void; onCancel: () => void }) {
   const { credentials, addCredential, updateCredential, deleteCredential } = useVaultSession();
   const existente = props.credentialId ? credentials.find((c) => c.id === props.credentialId) : undefined;
+  // Credenciais criadas antes da categoria virar uma lista fixa podem ter um valor fora
+  // dela — preservamos como opção extra em vez de trocar silenciosamente ao editar.
+  const categoriaForaDaLista = existente && !CATEGORIAS.includes(existente.category) ? existente.category : null;
 
   const [form, setForm] = useState<FormData>(
     existente
@@ -86,7 +91,22 @@ export function CredentialFormScreen(props: { credentialId?: string; onDone: () 
         />
 
         <label htmlFor="categoria">Categoria</label>
-        <input id="categoria" required value={form.category} onInput={(e) => updateField('category', (e.target as HTMLInputElement).value)} />
+        <select
+          id="categoria"
+          required
+          value={form.category}
+          onChange={(e) => updateField('category', (e.target as HTMLSelectElement).value)}
+        >
+          <option value="" disabled>
+            Selecione uma categoria
+          </option>
+          {categoriaForaDaLista && <option value={categoriaForaDaLista}>{categoriaForaDaLista}</option>}
+          {CATEGORIAS.map((categoria) => (
+            <option key={categoria} value={categoria}>
+              {categoria}
+            </option>
+          ))}
+        </select>
 
         <label htmlFor="url">Site</label>
         <input id="url" value={form.url} onInput={(e) => updateField('url', (e.target as HTMLInputElement).value)} />

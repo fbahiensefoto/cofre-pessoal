@@ -40,12 +40,12 @@ describe('CredentialFormScreen', () => {
     render(<CredentialFormScreen onDone={onDone} onCancel={() => {}} />);
 
     fireEvent.input(screen.getByLabelText(/nome do serviço/i), { target: { value: 'Novo Serviço' } });
-    fireEvent.input(screen.getByLabelText(/categoria/i), { target: { value: 'site' } });
+    fireEvent.change(screen.getByLabelText(/categoria/i), { target: { value: 'Trabalho' } });
     fireEvent.input(screen.getByLabelText(/^senha/i), { target: { value: 'nova-senha-ficticia' } });
     fireEvent.click(screen.getByRole('button', { name: /salvar/i }));
 
     await waitFor(() => expect(addCredential).toHaveBeenCalled());
-    expect(addCredential.mock.calls[0]![0]).toMatchObject({ serviceName: 'Novo Serviço', category: 'site', password: 'nova-senha-ficticia' });
+    expect(addCredential.mock.calls[0]![0]).toMatchObject({ serviceName: 'Novo Serviço', category: 'Trabalho', password: 'nova-senha-ficticia' });
     expect(onDone).toHaveBeenCalled();
   });
 
@@ -57,11 +57,19 @@ describe('CredentialFormScreen', () => {
     render(<CredentialFormScreen credentialId="id-form" onDone={onDone} onCancel={() => {}} />);
 
     expect((screen.getByLabelText(/nome do serviço/i) as HTMLInputElement).value).toBe('Serviço Form');
+    // "site" não está na lista fixa de categorias — precisa continuar selecionável e
+    // preservado, para não corromper silenciosamente uma credencial já existente.
+    expect((screen.getByLabelText(/categoria/i) as HTMLSelectElement).value).toBe('site');
 
     fireEvent.input(screen.getByLabelText(/nome do serviço/i), { target: { value: 'Serviço Form Editado' } });
     fireEvent.click(screen.getByRole('button', { name: /salvar/i }));
 
-    await waitFor(() => expect(updateCredential).toHaveBeenCalledWith('id-form', expect.objectContaining({ serviceName: 'Serviço Form Editado' })));
+    await waitFor(() =>
+      expect(updateCredential).toHaveBeenCalledWith(
+        'id-form',
+        expect.objectContaining({ serviceName: 'Serviço Form Editado', category: 'site' }),
+      ),
+    );
     expect(onDone).toHaveBeenCalled();
   });
 

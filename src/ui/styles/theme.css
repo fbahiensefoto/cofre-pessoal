@@ -45,6 +45,7 @@ button {
 }
 
 input,
+select,
 textarea {
   min-height: 44px;
   padding: 8px;
@@ -81,9 +82,15 @@ label:has(input[type='radio']) {
 }
 
 input:not([type='checkbox']):not([type='radio']),
+select,
 textarea {
   display: block;
   width: 100%;
+}
+
+form button,
+[role='dialog'] button {
+  min-width: 90px;
 }
 
 form button {
