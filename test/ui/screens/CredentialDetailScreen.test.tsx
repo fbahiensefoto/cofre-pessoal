@@ -74,6 +74,18 @@ describe('CredentialDetailScreen', () => {
       await waitFor(() => expect(screen.getByRole('button', { name: /^copiado!$/i })).toBeTruthy());
     });
 
+    it('copia o site e mostra confirmação temporária', async () => {
+      const copySpy = vi.spyOn(Clipboard, 'copyToClipboard').mockResolvedValue(true);
+      const credencial = { ...sampleCredential(), url: 'https://banco.exemplo.com' };
+      vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession([credencial]));
+      render(<CredentialDetailScreen credentialId="id-detalhe" onBack={() => {}} onEdit={() => {}} />);
+
+      fireEvent.click(screen.getByRole('button', { name: /copiar site/i }));
+
+      expect(copySpy).toHaveBeenCalledWith('https://banco.exemplo.com');
+      await waitFor(() => expect(screen.getByRole('button', { name: /^copiado!$/i })).toBeTruthy());
+    });
+
     it('copia a senha de verdade, mesmo oculta na tela, e mostra confirmação temporária', async () => {
       const copySpy = vi.spyOn(Clipboard, 'copyToClipboard').mockResolvedValue(true);
       vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession([sampleCredential()]));

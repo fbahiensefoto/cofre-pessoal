@@ -73,7 +73,7 @@ export function StarOutlineIcon({ size = 20 }: IconProps) {
 
 export function LockGlyph({ size = 40 }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 24 24" className="lock-glyph" aria-hidden="true">
       <path
         fill="currentColor"
         fillRule="evenodd"

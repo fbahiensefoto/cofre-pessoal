@@ -5,7 +5,7 @@ import { TagList } from '../components/TagList';
 import { ChevronLeftIcon } from '../components/icons';
 import { copyToClipboard } from '../lib/clipboard';
 
-type CampoCopiado = 'usuario' | 'senha' | null;
+type CampoCopiado = 'site' | 'usuario' | 'senha' | null;
 
 export function CredentialDetailScreen(props: { credentialId: string; onBack: () => void; onEdit: (id: string) => void }) {
   const { credentials } = useVaultSession();
@@ -54,10 +54,20 @@ export function CredentialDetailScreen(props: { credentialId: string; onBack: ()
       <TagList tags={credencial.tags} />
 
       {credencial.url && (
-        <div className="field">
-          <strong className="field__label">Site:</strong>
-          <span className="field__value">{credencial.url}</span>
-        </div>
+        <>
+          <div className="field">
+            <strong className="field__label">Site:</strong>
+            <span className="field__value">{credencial.url}</span>
+          </div>
+          <button
+            type="button"
+            className="btn btn--secondary"
+            data-copied={copiado === 'site'}
+            onClick={() => handleCopy('site', credencial.url!)}
+          >
+            {copiado === 'site' ? 'Copiado!' : 'Copiar site'}
+          </button>
+        </>
       )}
       {credencial.username && (
         <>
