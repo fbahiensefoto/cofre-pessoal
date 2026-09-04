@@ -47,6 +47,16 @@ describe('CredentialDetailScreen', () => {
     expect(screen.queryByText('senha-secreta-ficticia')).toBeNull();
   });
 
+  it('sem senha cadastrada (login via Google, GitHub etc.), não mostra a seção de senha, mas mostra o método de login', () => {
+    const credencial = { ...sampleCredential(), password: '', loginProvider: 'Google' };
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession([credencial]));
+    render(<CredentialDetailScreen credentialId="id-detalhe" onBack={() => {}} onEdit={() => {}} />);
+
+    expect(screen.queryByRole('button', { name: /revelar senha/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /copiar senha/i })).toBeNull();
+    expect(screen.getByText('Google')).toBeTruthy();
+  });
+
   it('revela e oculta a senha ao clicar no botão', () => {
     vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession([sampleCredential()]));
     render(<CredentialDetailScreen credentialId="id-detalhe" onBack={() => {}} onEdit={() => {}} />);

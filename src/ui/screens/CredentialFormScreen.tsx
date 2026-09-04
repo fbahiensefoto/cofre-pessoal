@@ -17,6 +17,7 @@ function emptyForm(owner: string): FormData {
     url: '',
     username: '',
     password: '',
+    loginProvider: '',
     notes: '',
     tags: [],
     favorite: false,
@@ -45,6 +46,7 @@ export function CredentialFormScreen(props: {
           url: existente.url ?? '',
           username: existente.username ?? '',
           password: existente.password,
+          loginProvider: existente.loginProvider ?? '',
           notes: existente.notes ?? '',
           tags: existente.tags,
           favorite: existente.favorite,
@@ -167,13 +169,20 @@ export function CredentialFormScreen(props: {
           <input
             id="senha"
             type="text"
-            required
             className="field-control display"
             value={form.password}
             onInput={(e) => updateField('password', (e.target as HTMLInputElement).value)}
           />
         </span>
-        <PasswordStrengthMeter password={form.password} />
+        {form.password && <PasswordStrengthMeter password={form.password} />}
+
+        <label htmlFor="login-com">Login com (Google, GitHub, Apple...)</label>
+        <input
+          id="login-com"
+          className="field-control"
+          value={form.loginProvider}
+          onInput={(e) => updateField('loginProvider', (e.target as HTMLInputElement).value)}
+        />
 
         <label htmlFor="tags">Tags (separadas por vírgula)</label>
         <input id="tags" className="field-control" value={tagsTexto} onInput={(e) => setTagsTexto((e.target as HTMLInputElement).value)} />

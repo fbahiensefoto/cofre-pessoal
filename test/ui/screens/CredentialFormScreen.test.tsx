@@ -67,6 +67,27 @@ describe('CredentialFormScreen', () => {
     expect(onDone).toHaveBeenCalled();
   });
 
+  it('salva com o campo Senha em branco, para credenciais sem senha própria (login via Google, GitHub etc.)', async () => {
+    const addCredential = vi.fn().mockResolvedValue(undefined);
+    vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ addCredential }));
+    const onDone = vi.fn();
+
+    render(<CredentialFormScreen initialOwner="Fábio Bahiense" onDone={onDone} onCancel={() => {}} />);
+
+    fireEvent.input(screen.getByLabelText(/nome do serviço/i), { target: { value: 'Serviço via Google' } });
+    fireEvent.change(screen.getByLabelText(/categoria/i), { target: { value: 'Trabalho' } });
+    fireEvent.input(screen.getByLabelText(/login com/i), { target: { value: 'Google' } });
+    fireEvent.click(screen.getByRole('button', { name: /salvar/i }));
+
+    await waitFor(() => expect(addCredential).toHaveBeenCalled());
+    expect(addCredential.mock.calls[0]![0]).toMatchObject({
+      serviceName: 'Serviço via Google',
+      password: '',
+      loginProvider: 'Google',
+    });
+    expect(onDone).toHaveBeenCalled();
+  });
+
   it('modo criação: dá para trocar a pessoa pré-selecionada por outra já cadastrada', async () => {
     const addCredential = vi.fn().mockResolvedValue(undefined);
     vi.spyOn(VaultSessionContext, 'useVaultSession').mockReturnValue(mockSession({ addCredential }));

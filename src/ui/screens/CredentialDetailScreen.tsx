@@ -86,29 +86,40 @@ export function CredentialDetailScreen(props: { credentialId: string; onBack: ()
         </>
       )}
 
-      <div className="field">
-        <strong className="field__label">Senha:</strong>
-        <span className="display-wrap">
-          <span className="field-control display">
-            <span key={String(senhaVisivel)} className="display__text" data-revealed={senhaVisivel} data-masked={!senhaVisivel}>
-              {senhaVisivel ? credencial.password : '••••••••'}
+      {credencial.password && (
+        <>
+          <div className="field">
+            <strong className="field__label">Senha:</strong>
+            <span className="display-wrap">
+              <span className="field-control display">
+                <span key={String(senhaVisivel)} className="display__text" data-revealed={senhaVisivel} data-masked={!senhaVisivel}>
+                  {senhaVisivel ? credencial.password : '••••••••'}
+                </span>
+              </span>
             </span>
-          </span>
-        </span>
-      </div>
-      <div className="actions">
-        <button type="button" className="btn btn--secondary" onClick={() => setSenhaVisivel((v) => !v)}>
-          {senhaVisivel ? 'Ocultar senha' : 'Revelar senha'}
-        </button>
-        <button
-          type="button"
-          className="btn btn--secondary"
-          data-copied={copiado === 'senha'}
-          onClick={() => handleCopy('senha', credencial.password)}
-        >
-          {copiado === 'senha' ? 'Copiado!' : 'Copiar senha'}
-        </button>
-      </div>
+          </div>
+          <div className="actions">
+            <button type="button" className="btn btn--secondary" onClick={() => setSenhaVisivel((v) => !v)}>
+              {senhaVisivel ? 'Ocultar senha' : 'Revelar senha'}
+            </button>
+            <button
+              type="button"
+              className="btn btn--secondary"
+              data-copied={copiado === 'senha'}
+              onClick={() => handleCopy('senha', credencial.password)}
+            >
+              {copiado === 'senha' ? 'Copiado!' : 'Copiar senha'}
+            </button>
+          </div>
+        </>
+      )}
+
+      {credencial.loginProvider && (
+        <div className="field">
+          <strong className="field__label">Login com:</strong>
+          <span className="field__value">{credencial.loginProvider}</span>
+        </div>
+      )}
 
       {credencial.notes && (
         <div className="field">

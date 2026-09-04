@@ -6,6 +6,7 @@ export interface Credential {
   url?: string;
   username?: string;
   password: string;
+  loginProvider?: string;
   notes?: string;
   tags: string[];
   favorite: boolean;
