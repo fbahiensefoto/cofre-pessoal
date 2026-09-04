@@ -9,11 +9,41 @@ export function ehPreferenciaValida(valor: unknown): valor is ThemePreference {
   return valor === 'light' || valor === 'dark' || valor === 'auto';
 }
 
+function aplicarMetaParaEscuro(escuro: boolean) {
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', escuro ? '#0C0C0D' : '#F1F1EF');
+  document
+    .querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
+    ?.setAttribute('content', escuro ? 'black' : 'default');
+}
+
+// Só existe um listener de tema do sistema por vez — cada chamada de
+// applyTheme remove o anterior antes de, condicionalmente, registrar um novo
+// (nunca só "registrar" isoladamente), senão cada troca de preferência vaza
+// um listener a mais na media query.
+let removerListenerTema: (() => void) | null = null;
+
 export function applyTheme(preference: ThemePreference) {
   if (preference === 'auto') {
     document.documentElement.removeAttribute('data-theme');
   } else {
     document.documentElement.dataset.theme = preference;
+  }
+
+  removerListenerTema?.();
+  removerListenerTema = null;
+
+  // O jsdom deste projeto não implementa matchMedia — toda leitura dele fica
+  // atrás desta guarda, só aqui.
+  if (preference === 'auto') {
+    if (typeof window.matchMedia === 'function') {
+      const mql = window.matchMedia('(prefers-color-scheme: dark)');
+      const escutar = () => aplicarMetaParaEscuro(mql.matches);
+      mql.addEventListener('change', escutar);
+      removerListenerTema = () => mql.removeEventListener('change', escutar);
+      aplicarMetaParaEscuro(mql.matches);
+    }
+  } else {
+    aplicarMetaParaEscuro(preference === 'dark');
   }
 }
 

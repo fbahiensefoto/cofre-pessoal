@@ -28,31 +28,34 @@ export function PersonCredentialsScreen(props: {
   }, [credenciaisDaPessoa, busca]);
 
   return (
-    <div>
-      <button type="button" onClick={props.onBack}>
-        <ChevronLeftIcon /> Voltar
-      </button>
-      <h1>{props.owner}</h1>
+    <div className="screen">
+      <div className="screen-head">
+        <button type="button" className="btn btn--ghost" onClick={props.onBack}>
+          <ChevronLeftIcon /> Voltar
+        </button>
+        <h1>{props.owner}</h1>
+      </div>
 
       <label htmlFor="busca-credenciais">Pesquisar</label>
       <input
         id="busca-credenciais"
         type="search"
+        className="field-control field-control--search"
         value={busca}
         onInput={(e) => setBusca((e.target as HTMLInputElement).value)}
       />
 
       {filtradas.length === 0 ? (
-        <p style={{ marginTop: '16px' }}>Nenhuma credencial encontrada.</p>
+        <p className="empty">Nenhuma credencial encontrada.</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0 0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <ul className="card-list">
           {filtradas.map((c) => (
             <CredentialListItem key={c.id} credential={c} onSelect={props.onSelectCredential} onToggleFavorite={toggleFavorite} />
           ))}
         </ul>
       )}
 
-      <button type="button" onClick={props.onCreateNew} style={{ marginTop: '16px' }}>
+      <button type="button" className="btn btn--primary btn--block" onClick={props.onCreateNew}>
         Adicionar credencial
       </button>
     </div>

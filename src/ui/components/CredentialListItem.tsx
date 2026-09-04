@@ -11,20 +11,11 @@ export function CredentialListItem(props: {
   const { credential } = props;
 
   return (
-    <li
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        padding: '8px 10px',
-        background: 'var(--color-surface)',
-        border: '1px solid var(--color-accent)',
-        borderRadius: '10px',
-        boxShadow: 'var(--shadow-sm)',
-      }}
-    >
+    <li className="card-cred">
       <button
         type="button"
+        className="btn btn--icon"
+        data-favorite={credential.favorite}
         aria-label={credential.favorite ? 'Remover dos favoritos' : 'Marcar como favorito'}
         onClick={(e) => {
           e.stopPropagation();
@@ -34,29 +25,12 @@ export function CredentialListItem(props: {
           // podemos deixar a rejeição sem tratamento nenhum.
           Promise.resolve(props.onToggleFavorite(credential.id)).catch(() => {});
         }}
-        style={{ minWidth: '44px', minHeight: '44px', background: 'transparent', border: 'none', boxShadow: 'none' }}
       >
         {credential.favorite ? <StarIcon /> : <StarOutlineIcon />}
       </button>
-      <button
-        type="button"
-        onClick={() => props.onSelect(credential.id)}
-        style={{
-          flex: 1,
-          textAlign: 'left',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          justifyContent: 'center',
-          gap: '4px',
-          minHeight: '44px',
-          background: 'transparent',
-          border: 'none',
-          boxShadow: 'none',
-        }}
-      >
+      <button type="button" className="card-cred__main" onClick={() => props.onSelect(credential.id)}>
         <span>{credential.serviceName}</span>
-        <span style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <span className="card-cred__meta">
           <CategoryBadge category={credential.category} />
           <TagList tags={credential.tags} />
         </span>

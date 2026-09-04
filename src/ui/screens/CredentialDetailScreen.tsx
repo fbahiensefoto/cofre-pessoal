@@ -27,9 +27,9 @@ export function CredentialDetailScreen(props: { credentialId: string; onBack: ()
   const credencial = credentials.find((c) => c.id === props.credentialId);
   if (!credencial) {
     return (
-      <div>
+      <div className="screen">
         <p>Credencial não encontrada.</p>
-        <button type="button" onClick={props.onBack}>
+        <button type="button" className="btn btn--ghost" onClick={props.onBack}>
           <ChevronLeftIcon /> Voltar
         </button>
       </div>
@@ -37,57 +37,77 @@ export function CredentialDetailScreen(props: { credentialId: string; onBack: ()
   }
 
   return (
-    <div>
-      <button type="button" onClick={props.onBack}>
-        <ChevronLeftIcon /> Voltar
-      </button>
-      <h1>{credencial.serviceName}</h1>
+    <div className="screen">
+      <div className="screen-head">
+        <button type="button" className="btn btn--ghost" onClick={props.onBack}>
+          <ChevronLeftIcon /> Voltar
+        </button>
+        <h1>{credencial.serviceName}</h1>
+      </div>
       {credencial.owner && (
-        <p>
-          <strong>Pessoa:</strong> {credencial.owner}
-        </p>
+        <div className="field">
+          <strong className="field__label">Pessoa:</strong>
+          <span className="field__value">{credencial.owner}</span>
+        </div>
       )}
       <CategoryBadge category={credencial.category} />
       <TagList tags={credencial.tags} />
 
       {credencial.url && (
-        <p>
-          <strong>Site:</strong> {credencial.url}
-        </p>
+        <div className="field">
+          <strong className="field__label">Site:</strong>
+          <span className="field__value">{credencial.url}</span>
+        </div>
       )}
       {credencial.username && (
         <>
-          <p>
-            <strong>Usuário:</strong> {credencial.username}
-          </p>
-          <button type="button" onClick={() => handleCopy('usuario', credencial.username!)} style={{ marginTop: '16px' }}>
+          <div className="field">
+            <strong className="field__label">Usuário:</strong>
+            <span className="field__value field__value--mono">{credencial.username}</span>
+          </div>
+          <button
+            type="button"
+            className="btn btn--secondary"
+            data-copied={copiado === 'usuario'}
+            onClick={() => handleCopy('usuario', credencial.username!)}
+          >
             {copiado === 'usuario' ? 'Copiado!' : 'Copiar usuário'}
           </button>
         </>
       )}
 
-      <p>
-        <strong>Senha:</strong>{' '}
-        <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', letterSpacing: '0.04em' }}>
-          {senhaVisivel ? credencial.password : '••••••••'}
+      <div className="field">
+        <strong className="field__label">Senha:</strong>
+        <span className="display-wrap">
+          <span className="field-control display">
+            <span key={String(senhaVisivel)} className="display__text" data-revealed={senhaVisivel} data-masked={!senhaVisivel}>
+              {senhaVisivel ? credencial.password : '••••••••'}
+            </span>
+          </span>
         </span>
-      </p>
-      <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-        <button type="button" onClick={() => setSenhaVisivel((v) => !v)}>
+      </div>
+      <div className="actions">
+        <button type="button" className="btn btn--secondary" onClick={() => setSenhaVisivel((v) => !v)}>
           {senhaVisivel ? 'Ocultar senha' : 'Revelar senha'}
         </button>
-        <button type="button" onClick={() => handleCopy('senha', credencial.password)}>
+        <button
+          type="button"
+          className="btn btn--secondary"
+          data-copied={copiado === 'senha'}
+          onClick={() => handleCopy('senha', credencial.password)}
+        >
           {copiado === 'senha' ? 'Copiado!' : 'Copiar senha'}
         </button>
       </div>
 
       {credencial.notes && (
-        <p>
-          <strong>Observações:</strong> {credencial.notes}
-        </p>
+        <div className="field">
+          <strong className="field__label">Observações:</strong>
+          <span className="field__value">{credencial.notes}</span>
+        </div>
       )}
 
-      <button type="button" onClick={() => props.onEdit(credencial.id)} style={{ marginTop: '16px' }}>
+      <button type="button" className="btn btn--secondary btn--block" onClick={() => props.onEdit(credencial.id)}>
         Editar
       </button>
     </div>

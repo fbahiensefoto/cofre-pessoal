@@ -100,11 +100,19 @@ export function CredentialFormScreen(props: {
   }
 
   return (
-    <div>
-      <h1>{props.credentialId ? 'Editar credencial' : 'Nova credencial'}</h1>
+    <div className="screen">
+      <div className="screen-head">
+        <h1>{props.credentialId ? 'Editar credencial' : 'Nova credencial'}</h1>
+      </div>
       <form onSubmit={handleSubmit}>
         <label htmlFor="pessoa">Pessoa</label>
-        <select id="pessoa" required value={form.owner} onChange={(e) => updateField('owner', (e.target as HTMLSelectElement).value)}>
+        <select
+          id="pessoa"
+          required
+          className="field-control"
+          value={form.owner}
+          onChange={(e) => updateField('owner', (e.target as HTMLSelectElement).value)}
+        >
           <option value="" disabled>
             Selecione uma pessoa
           </option>
@@ -119,6 +127,7 @@ export function CredentialFormScreen(props: {
         <input
           id="nome-servico"
           required
+          className="field-control"
           value={form.serviceName}
           onInput={(e) => updateField('serviceName', (e.target as HTMLInputElement).value)}
         />
@@ -127,6 +136,7 @@ export function CredentialFormScreen(props: {
         <select
           id="categoria"
           required
+          className="field-control"
           value={form.category}
           onChange={(e) => updateField('category', (e.target as HTMLSelectElement).value)}
         >
@@ -142,27 +152,39 @@ export function CredentialFormScreen(props: {
         </select>
 
         <label htmlFor="url">Site</label>
-        <input id="url" value={form.url} onInput={(e) => updateField('url', (e.target as HTMLInputElement).value)} />
+        <input id="url" className="field-control" value={form.url} onInput={(e) => updateField('url', (e.target as HTMLInputElement).value)} />
 
         <label htmlFor="usuario">Usuário ou e-mail</label>
-        <input id="usuario" value={form.username} onInput={(e) => updateField('username', (e.target as HTMLInputElement).value)} />
+        <input
+          id="usuario"
+          className="field-control field-control--mono"
+          value={form.username}
+          onInput={(e) => updateField('username', (e.target as HTMLInputElement).value)}
+        />
 
         <label htmlFor="senha">Senha</label>
-        <input
-          id="senha"
-          type="text"
-          required
-          value={form.password}
-          onInput={(e) => updateField('password', (e.target as HTMLInputElement).value)}
-          style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', letterSpacing: '0.04em' }}
-        />
+        <span className="display-wrap">
+          <input
+            id="senha"
+            type="text"
+            required
+            className="field-control display"
+            value={form.password}
+            onInput={(e) => updateField('password', (e.target as HTMLInputElement).value)}
+          />
+        </span>
         <PasswordStrengthMeter password={form.password} />
 
         <label htmlFor="tags">Tags (separadas por vírgula)</label>
-        <input id="tags" value={tagsTexto} onInput={(e) => setTagsTexto((e.target as HTMLInputElement).value)} />
+        <input id="tags" className="field-control" value={tagsTexto} onInput={(e) => setTagsTexto((e.target as HTMLInputElement).value)} />
 
         <label htmlFor="observacoes">Observações</label>
-        <textarea id="observacoes" value={form.notes} onInput={(e) => updateField('notes', (e.target as HTMLTextAreaElement).value)} />
+        <textarea
+          id="observacoes"
+          className="field-control"
+          value={form.notes}
+          onInput={(e) => updateField('notes', (e.target as HTMLTextAreaElement).value)}
+        />
 
         <label htmlFor="favorito">
           <input
@@ -175,22 +197,24 @@ export function CredentialFormScreen(props: {
         </label>
 
         {erro && (
-          <p role="alert" style={{ color: 'var(--color-danger)' }}>
+          <p role="alert" className="msg msg--error">
             {erro}
           </p>
         )}
 
-        <button type="submit" disabled={salvando}>
-          Salvar
-        </button>
-        {!confirmandoExclusao && (
-          <button type="button" onClick={props.onCancel}>
-            Cancelar
+        <div className="actions">
+          <button type="submit" className="btn btn--primary" disabled={salvando}>
+            Salvar
           </button>
-        )}
+          {!confirmandoExclusao && (
+            <button type="button" className="btn btn--secondary" onClick={props.onCancel}>
+              Cancelar
+            </button>
+          )}
+        </div>
 
         {props.credentialId && (
-          <button type="button" onClick={() => setConfirmandoExclusao(true)} style={{ color: 'var(--color-danger)' }}>
+          <button type="button" className="btn btn--danger" onClick={() => setConfirmandoExclusao(true)}>
             Excluir
           </button>
         )}

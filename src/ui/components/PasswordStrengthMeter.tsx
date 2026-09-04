@@ -1,39 +1,27 @@
 import { evaluatePasswordStrength, type StrengthLevel } from '../lib/passwordStrength';
 
-const NIVEL_PARA_LARGURA: Record<StrengthLevel, string> = {
-  fraca: '25%',
-  'razoável': '50%',
-  forte: '75%',
-  'muito forte': '100%',
-};
-
-// Deriva a ordem dos níveis do próprio Record acima (em vez de repetir um
-// segundo array literal) para que as duas listas não possam divergir.
-const NIVEIS = Object.keys(NIVEL_PARA_LARGURA) as StrengthLevel[];
+const NIVEIS = ['fraca', 'razoável', 'forte', 'muito forte'] satisfies StrengthLevel[];
 
 export function PasswordStrengthMeter(props: { password: string }) {
   const nivel = evaluatePasswordStrength(props.password);
-  const largura = NIVEL_PARA_LARGURA[nivel];
+  const nivelNumero = NIVEIS.indexOf(nivel) + 1;
 
   return (
-    <div style={{ marginTop: '8px' }}>
+    <div className="meter">
       <div
         role="progressbar"
         aria-label="Força da senha"
-        aria-valuenow={NIVEIS.indexOf(nivel) + 1}
+        aria-valuenow={nivelNumero}
         aria-valuemin={1}
         aria-valuemax={4}
-        style={{
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-accent)',
-          borderRadius: '4px',
-          height: '8px',
-          overflow: 'hidden',
-        }}
+        className="meter__track"
+        data-level={nivelNumero}
       >
-        <div style={{ width: largura, height: '100%', background: 'var(--color-accent)' }} />
+        {[0, 1, 2, 3].map((i) => (
+          <span key={i} aria-hidden="true" className="meter__seg" />
+        ))}
       </div>
-      <span>Força: {nivel}</span>
+      <span className="meter__label">Força: {nivel}</span>
     </div>
   );
 }

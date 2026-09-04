@@ -70,3 +70,16 @@ export function StarOutlineIcon({ size = 20 }: IconProps) {
     </svg>
   );
 }
+
+export function LockGlyph({ size = 40 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M12 2.75a4.75 4.75 0 0 0-4.75 4.75V10H6.5A2.5 2.5 0 0 0 4 12.5v6A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5v-6a2.5 2.5 0 0 0-2.5-2.5h-.75V7.5A4.75 4.75 0 0 0 12 2.75zM9.25 10V7.5a2.75 2.75 0 0 1 5.5 0V10h-5.5zM12 14.25a1.5 1.5 0 0 1 .78 2.78l.32 2.22h-2.2l.32-2.22A1.5 1.5 0 0 1 12 14.25z"
+      />
+    </svg>
+  );
+}

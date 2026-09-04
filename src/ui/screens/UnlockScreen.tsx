@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks';
 import type { Credential } from '../../core/model/credential';
 import type { Person } from '../../core/model/person';
 import type { VaultRepository, VaultSession } from '../../core/vault/vaultRepository';
+import { LockGlyph } from '../components/icons';
 
 export function UnlockScreen(props: {
   repository: VaultRepository;
@@ -26,24 +27,30 @@ export function UnlockScreen(props: {
   }
 
   return (
-    <div>
-      <h1>Cofre Pessoal</h1>
+    <div className="screen screen--centered">
+      <LockGlyph />
+      <div className="screen-head">
+        <h1>Cofre Pessoal</h1>
+      </div>
       <form onSubmit={handleSubmit}>
         <label htmlFor="senha-desbloqueio">Senha mestra</label>
-        <input
-          id="senha-desbloqueio"
-          type="password"
-          value={senha}
-          onInput={(e) => setSenha((e.target as HTMLInputElement).value)}
-        />
+        <span className="display-wrap">
+          <input
+            id="senha-desbloqueio"
+            type="password"
+            className="field-control display"
+            value={senha}
+            onInput={(e) => setSenha((e.target as HTMLInputElement).value)}
+          />
+        </span>
 
         {erro && (
-          <p role="alert" style={{ color: 'var(--color-danger)' }}>
+          <p role="alert" className="msg msg--error">
             {erro}
           </p>
         )}
 
-        <button type="submit" disabled={desbloqueando}>
+        <button type="submit" className="btn btn--primary btn--block" disabled={desbloqueando}>
           Desbloquear
         </button>
       </form>

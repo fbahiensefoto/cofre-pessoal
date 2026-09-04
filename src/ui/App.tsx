@@ -58,7 +58,7 @@ export function App() {
   }
 
   if (gate.kind === 'loading' || !sodium || !repository) {
-    return <div>Carregando…</div>;
+    return <div className="loading">Carregando…</div>;
   }
 
   if (gate.kind === 'welcome') {

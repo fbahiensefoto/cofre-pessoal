@@ -3,11 +3,9 @@ export function TagList(props: { tags: string[] }) {
     return null;
   }
   return (
-    <ul style={{ display: 'flex', gap: '4px', listStyle: 'none', padding: 0, margin: 0, flexWrap: 'wrap' }}>
+    <ul className="tags">
       {props.tags.map((tag) => (
-        <li key={tag} style={{ fontSize: '0.85em', color: 'var(--color-text)', opacity: 0.8 }}>
-          {tag}
-        </li>
+        <li key={tag}>{tag}</li>
       ))}
     </ul>
   );

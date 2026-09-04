@@ -5,6 +5,7 @@ import type { Credential } from '../../core/model/credential';
 import type { Person } from '../../core/model/person';
 import type { VaultRepository, VaultSession } from '../../core/vault/vaultRepository';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
+import { LockGlyph } from '../components/icons';
 import { detalheDoErro } from '../lib/errorMessage';
 
 export function WelcomeScreen(props: {
@@ -44,38 +45,47 @@ export function WelcomeScreen(props: {
   }
 
   return (
-    <div>
-      <h1>Bem-vindo ao Cofre Pessoal</h1>
-      <p>
+    <div className="screen screen--centered">
+      <LockGlyph />
+      <div className="screen-head">
+        <h1>Bem-vindo ao Cofre Pessoal</h1>
+      </div>
+      <p className="lead">
         Crie uma senha mestra para proteger suas credenciais. Recomendamos uma frase longa, fácil de lembrar — não
         exigimos caracteres especiais nem regras artificiais. Essa senha não pode ser recuperada por ninguém: guarde-a
         bem.
       </p>
       <form onSubmit={handleSubmit}>
         <label htmlFor="senha-mestra">Crie uma senha mestra</label>
-        <input
-          id="senha-mestra"
-          type="password"
-          value={senha}
-          onInput={(e) => setSenha((e.target as HTMLInputElement).value)}
-        />
+        <span className="display-wrap">
+          <input
+            id="senha-mestra"
+            type="password"
+            className="field-control display"
+            value={senha}
+            onInput={(e) => setSenha((e.target as HTMLInputElement).value)}
+          />
+        </span>
         <PasswordStrengthMeter password={senha} />
 
         <label htmlFor="confirmar-senha-mestra">Confirme a senha mestra</label>
-        <input
-          id="confirmar-senha-mestra"
-          type="password"
-          value={confirmacao}
-          onInput={(e) => setConfirmacao((e.target as HTMLInputElement).value)}
-        />
+        <span className="display-wrap">
+          <input
+            id="confirmar-senha-mestra"
+            type="password"
+            className="field-control display"
+            value={confirmacao}
+            onInput={(e) => setConfirmacao((e.target as HTMLInputElement).value)}
+          />
+        </span>
 
         {erro && (
-          <p role="alert" style={{ color: 'var(--color-danger)' }}>
+          <p role="alert" className="msg msg--error">
             {erro}
           </p>
         )}
 
-        <button type="submit" disabled={criando}>
+        <button type="submit" className="btn btn--primary btn--block" disabled={criando}>
           Criar cofre
         </button>
       </form>

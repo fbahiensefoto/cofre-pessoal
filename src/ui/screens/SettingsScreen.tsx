@@ -115,13 +115,15 @@ export function SettingsScreen(props: { repository: VaultRepository; onBack: () 
   }
 
   return (
-    <div>
-      <button type="button" onClick={props.onBack}>
-        <ChevronLeftIcon /> Voltar
-      </button>
-      <h1>Configurações</h1>
+    <div className="screen">
+      <div className="screen-head">
+        <button type="button" className="btn btn--ghost" onClick={props.onBack}>
+          <ChevronLeftIcon /> Voltar
+        </button>
+        <h1>Configurações</h1>
+      </div>
 
-      <section>
+      <section className="panel">
         <h2>Tema</h2>
         <label>
           <input type="radio" name="tema" checked={preference === 'auto'} onChange={() => setPreference('auto')} />
@@ -149,69 +151,89 @@ export function SettingsScreen(props: { repository: VaultRepository; onBack: () 
         </label>
       </section>
 
-      <section>
+      <section className="panel">
         <h2>Backup</h2>
         <p>Uma cópia cifrada de todas as suas pessoas e credenciais, para guardar em outro lugar (ex.: enviar para você mesmo por mensagem).</p>
-        <button type="button" onClick={handleExportBackup} disabled={exportando}>
+        <button type="button" className="btn btn--secondary" onClick={handleExportBackup} disabled={exportando}>
           {exportando ? 'Preparando...' : 'Baixar backup'}
         </button>
 
         <label htmlFor="restaurar-backup">Restaurar de um backup</label>
-        <input id="restaurar-backup" ref={inputArquivoRef} type="file" accept=".cofre" onChange={handleFileSelected} />
-        <p style={{ marginTop: '4px', fontSize: '0.85em', color: 'var(--color-accent)' }}>
-          Substitui tudo que está neste aparelho pelo conteúdo do arquivo escolhido.
-        </p>
+        <div className="file-picker">
+          <button type="button" className="btn btn--secondary" onClick={() => inputArquivoRef.current?.click()}>
+            Escolher arquivo
+          </button>
+          <span className="file-picker__name">{arquivoParaRestaurar ? arquivoParaRestaurar.name : 'Nenhum arquivo selecionado'}</span>
+          <input
+            id="restaurar-backup"
+            ref={inputArquivoRef}
+            type="file"
+            accept=".cofre"
+            className="sr-only"
+            onChange={handleFileSelected}
+          />
+        </div>
+        <p className="hint">Substitui tudo que está neste aparelho pelo conteúdo do arquivo escolhido.</p>
 
         {erroBackup && (
-          <p role="alert" style={{ color: 'var(--color-danger)' }}>
+          <p role="alert" className="msg msg--error">
             {erroBackup}
           </p>
         )}
-        {mensagemBackup && <p>{mensagemBackup}</p>}
+        {mensagemBackup && <p className="msg msg--ok">{mensagemBackup}</p>}
       </section>
 
-      <section>
+      <section className="panel">
         <h2>Trocar senha mestra</h2>
         <form onSubmit={handleChangePassword}>
           <label htmlFor="senha-atual">Senha atual</label>
-          <input
-            id="senha-atual"
-            type="password"
-            value={senhaAtual}
-            onInput={(e) => setSenhaAtual((e.target as HTMLInputElement).value)}
-          />
+          <span className="display-wrap">
+            <input
+              id="senha-atual"
+              type="password"
+              className="field-control display"
+              value={senhaAtual}
+              onInput={(e) => setSenhaAtual((e.target as HTMLInputElement).value)}
+            />
+          </span>
 
           <label htmlFor="nova-senha">Nova senha</label>
-          <input
-            id="nova-senha"
-            type="password"
-            value={novaSenha}
-            onInput={(e) => setNovaSenha((e.target as HTMLInputElement).value)}
-          />
+          <span className="display-wrap">
+            <input
+              id="nova-senha"
+              type="password"
+              className="field-control display"
+              value={novaSenha}
+              onInput={(e) => setNovaSenha((e.target as HTMLInputElement).value)}
+            />
+          </span>
           <PasswordStrengthMeter password={novaSenha} />
 
           <label htmlFor="confirmar-nova-senha">Confirme a nova senha</label>
-          <input
-            id="confirmar-nova-senha"
-            type="password"
-            value={confirmarNovaSenha}
-            onInput={(e) => setConfirmarNovaSenha((e.target as HTMLInputElement).value)}
-          />
+          <span className="display-wrap">
+            <input
+              id="confirmar-nova-senha"
+              type="password"
+              className="field-control display"
+              value={confirmarNovaSenha}
+              onInput={(e) => setConfirmarNovaSenha((e.target as HTMLInputElement).value)}
+            />
+          </span>
 
           {erro && (
-            <p role="alert" style={{ color: 'var(--color-danger)' }}>
+            <p role="alert" className="msg msg--error">
               {erro}
             </p>
           )}
-          {mensagem && <p>{mensagem}</p>}
+          {mensagem && <p className="msg msg--ok">{mensagem}</p>}
 
-          <button type="submit" disabled={trocando}>
+          <button type="submit" className="btn btn--secondary" disabled={trocando}>
             Trocar senha
           </button>
         </form>
       </section>
 
-      <button type="button" onClick={lock} style={{ marginTop: '16px' }}>
+      <button type="button" className="btn btn--secondary btn--block" onClick={lock}>
         Bloquear cofre
       </button>
 
@@ -224,7 +246,11 @@ export function SettingsScreen(props: { repository: VaultRepository; onBack: () 
         }}
         onCancel={handleCancelRestore}
       />
-      {restaurando && <p role="status">Restaurando...</p>}
+      {restaurando && (
+        <p role="status" className="msg msg--ok">
+          Restaurando...
+        </p>
+      )}
     </div>
   );
 }

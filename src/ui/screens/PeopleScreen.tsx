@@ -54,40 +54,34 @@ export function PeopleScreen(props: { onSelectPerson: (name: string) => void; on
   }
 
   return (
-    <div>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>Cofre Pessoal</h1>
-        <button type="button" onClick={props.onOpenSettings} aria-label="Configurações">
-          <GearIcon />
-        </button>
+    <div className="screen">
+      <header className="screen-head">
+        <div className="screen-head__row">
+          <h1>Cofre Pessoal</h1>
+          <button type="button" className="btn btn--icon" onClick={props.onOpenSettings} aria-label="Configurações">
+            <GearIcon />
+          </button>
+        </div>
       </header>
 
       <label htmlFor="busca-pessoas">Pesquisar pessoa</label>
-      <input id="busca-pessoas" type="search" value={busca} onInput={(e) => setBusca((e.target as HTMLInputElement).value)} />
+      <input
+        id="busca-pessoas"
+        type="search"
+        className="field-control field-control--search"
+        value={busca}
+        onInput={(e) => setBusca((e.target as HTMLInputElement).value)}
+      />
 
       {pessoasFiltradas.length === 0 ? (
-        <p style={{ marginTop: '16px' }}>Nenhuma pessoa encontrada.</p>
+        <p className="empty">Nenhuma pessoa encontrada.</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0 0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <ul className="card-list">
           {pessoasFiltradas.map((pessoa) => (
             <li key={pessoa.id}>
-              <button
-                type="button"
-                onClick={() => props.onSelectPerson(pessoa.name)}
-                style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  justifyContent: 'center',
-                  gap: '4px',
-                  minHeight: '44px',
-                  padding: '10px 14px',
-                }}
-              >
+              <button type="button" className="card-person" onClick={() => props.onSelectPerson(pessoa.name)}>
                 <span>{pessoa.name}</span>
-                <span style={{ color: 'var(--color-accent)', fontSize: '0.85em' }}>
+                <span className="card-person__count">
                   {contarCredenciais(pessoa.name)} {contarCredenciais(pessoa.name) === 1 ? 'credencial' : 'credenciais'}
                 </span>
               </button>
@@ -98,15 +92,15 @@ export function PeopleScreen(props: { onSelectPerson: (name: string) => void; on
 
       <form onSubmit={handleAddPerson}>
         <label htmlFor="nome-pessoa">Nova pessoa</label>
-        <input id="nome-pessoa" value={nome} onInput={(e) => setNome((e.target as HTMLInputElement).value)} />
+        <input id="nome-pessoa" className="field-control" value={nome} onInput={(e) => setNome((e.target as HTMLInputElement).value)} />
 
         {erro && (
-          <p role="alert" style={{ color: 'var(--color-danger)' }}>
+          <p role="alert" className="msg msg--error">
             {erro}
           </p>
         )}
 
-        <button type="submit" disabled={salvando}>
+        <button type="submit" className="btn btn--secondary" disabled={salvando}>
           Cadastrar
         </button>
       </form>

@@ -10,38 +10,18 @@ export function ConfirmDialog(props: {
   }
 
   return (
-    <div
-      role="dialog"
-      aria-labelledby="confirm-dialog-title"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-        background: 'rgba(0, 0, 0, 0.6)',
-      }}
-    >
-      <div
-        style={{
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-accent)',
-          padding: '20px',
-          borderRadius: '16px',
-          boxShadow: 'var(--shadow-md)',
-          maxWidth: '400px',
-          width: '100%',
-        }}
-      >
+    <div role="dialog" aria-labelledby="confirm-dialog-title" className="dialog" style={{ position: 'fixed', inset: 0 }}>
+      <div className="dialog__card">
         <h2 id="confirm-dialog-title">{props.title}</h2>
         <p>{props.message}</p>
-        <button type="button" onClick={props.onCancel}>
-          Cancelar
-        </button>
-        <button type="button" onClick={props.onConfirm} style={{ color: 'var(--color-danger)' }}>
-          Confirmar
-        </button>
+        <div className="actions">
+          <button type="button" className="btn btn--secondary" onClick={props.onCancel}>
+            Cancelar
+          </button>
+          <button type="button" className="btn btn--danger" onClick={props.onConfirm}>
+            Confirmar
+          </button>
+        </div>
       </div>
     </div>
   );
